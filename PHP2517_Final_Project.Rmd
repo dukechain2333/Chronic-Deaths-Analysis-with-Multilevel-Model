@@ -26,6 +26,26 @@ library(dplyr)       ## Used to manipulate data
 ```{r}
 library(readxl)
 df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
+
+#first convert columns to factor or numeric columns
+df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>% 
+  mutate(across(.cols = c(
+  `SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life`,
+  `Hospice Sector Reimbursements per Decedent during the Last Two Years of Life`,
+  `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`,
+  `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`,
+  `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`,
+  `Medical & Surgical Unit Bed Inputs per 1,000 Decedents during the Last Two Years of Life`,
+  `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`,,
+  `RNs Required Under Proposed Federal Standards per 1,000 Decedents during the Last Two Years of Life`,
+  `High-Intensity ICU Days per Decedent during the Last Six Months of Life`,
+  `Intermediate-Intensity ICU Days per Decedent during the Last Six Months of Life`,
+  `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`,
+  `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`,
+  `Hospice Days per Decedent during the Last Six Months of Life`),~as.numeric(.)))
+summary(df.chronic)
+
+#multilevel structure: Hospital, City, State
 ```
 
 
