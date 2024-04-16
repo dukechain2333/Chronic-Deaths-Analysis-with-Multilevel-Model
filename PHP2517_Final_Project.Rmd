@@ -1,0 +1,31 @@
+---
+title: "PHP2517 Final Project"
+author: "Peirong Hao, William Qian"
+output:
+  pdf_document: default
+header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+---
+
+```{r setup, include=FALSE}
+# https://yihui.org/knitr/options/
+knitr::opts_chunk$set(message=FALSE, 
+                      warning=FALSE, 
+                      error=FALSE, 
+                      echo = FALSE, 
+                      fig.pos = "H" ,
+                      fig.align = 'center',
+                      tidy=TRUE, tidy.opts=list(width.cutoff=80))
+
+library(tidyverse)
+library(knitr)
+set.seed(123)
+library(tidyr)       ## Used to tidy data
+library(dplyr)       ## Used to manipulate data
+```
+
+```{r}
+library(readxl)
+df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
+```
+
+
