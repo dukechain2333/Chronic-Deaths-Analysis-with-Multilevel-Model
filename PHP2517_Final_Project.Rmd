@@ -45,7 +45,9 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
   `Hospice Days per Decedent during the Last Six Months of Life`),~as.numeric(.)))
 summary(df.chronic)
 
-#multilevel structure: Hospital, City, State
+#multilevel structure: Hospital, state(same measure), avoid system
+#proposal: association between variables and outcome, clear y, x 
+#model selection: aic, model assumption 
 ```
 
 
