@@ -103,5 +103,28 @@ overall_summary %>%
 kable_styling(full_width = FALSE, latex_options = c('hold_position'))
 ```
 
+```{r}
+df.chronic %>%
+  group_by(State) %>%
+  summarise(var_dead = var(`Number of deaths among chronically ill patients assigned to hospital`)) %>%
+  ggplot(aes(x = State, y = var_dead)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Variance of Number of deaths by States",
+       x = "States",
+       y = "Variance of Number of deaths") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
 
+```{r}
+df.chronic %>%
+  group_by(Region) %>%
+  summarise(var_dead = var(`Number of deaths among chronically ill patients assigned to hospital`)) %>%
+  ggplot(aes(x = Region, y = var_dead)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Variance of Number of deaths by Region",
+       x = "States",
+       y = "Variance of Number of Region") +
+  theme_minimal()
+```
 
