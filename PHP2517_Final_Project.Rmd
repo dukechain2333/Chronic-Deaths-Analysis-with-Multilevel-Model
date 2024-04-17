@@ -57,8 +57,8 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
   filter(!is.na(Region))
 
 #summary(df.chronic)
-summary(df.chronic$State)
-summary(df.chronic$Region)
+# summary(df.chronic$State)
+# summary(df.chronic$Region)
 
 #proposal: association between variables and outcome, clear y, x 
 #model selection: aic, model assumption 
