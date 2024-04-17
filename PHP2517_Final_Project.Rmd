@@ -81,7 +81,7 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
 ```{r}
 library(dplyr)
 library(kableExtra)
-#create table summarizing antiscore
+
 overall_summary <- df.chronic %>%
   group_by(Region, State) %>% 
   summarise(
