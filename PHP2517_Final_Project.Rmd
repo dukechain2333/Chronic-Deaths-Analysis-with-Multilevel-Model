@@ -170,6 +170,8 @@ library(corrplot)
 #corrplot(dat, method = "number", type = "lower" , title="Correlation Plot", mar=c(0,0,1,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
 corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
 #corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+
+#https://r-graph-gallery.com/74-margin-and-oma-cheatsheet.html
 ```
 
 
