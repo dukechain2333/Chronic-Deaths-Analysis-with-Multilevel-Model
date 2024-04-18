@@ -128,6 +128,7 @@ df.chronic <- df.chronic %>% select(-cols_to_drop)
 
 ```{r}
 df.chronic[df.chronic<0] <- NA
+# add check for proportion of zeros in each column!!!
 df.chronic <- df.chronic %>% drop_na()
 ```
 
@@ -157,6 +158,20 @@ cor.df.numeric <- cor(df.numeric, use = "complete.obs")
 #   type = "upper" # show only upper side
 # )
 #corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+
+
+#https://stackoverflow.com/questions/20030646/reformat-a-correlation-matrix-in-r-to-remove-row-names-column-names-and-cells
+dat <- as.matrix(cor.df.numeric)
+dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
+dat[upper.tri(dat)] <- NA
+print(dat, na.print = " ") 
+
+library(corrplot)
+#corrplot(dat, method = "number", type = "lower" , title="Correlation Plot", mar=c(0,0,1,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+#corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+
+#https://r-graph-gallery.com/74-margin-and-oma-cheatsheet.html
 ```
 
 
