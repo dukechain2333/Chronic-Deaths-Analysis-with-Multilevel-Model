@@ -21,6 +21,7 @@ library(knitr)
 set.seed(123)
 library(tidyr)       ## Used to tidy data
 library(dplyr)       ## Used to manipulate data
+library(gtsummary)
 ```
 
 ```{r}
@@ -56,26 +57,16 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
          Region = factor(Region))%>% 
   filter(!is.na(Region))
 
-summary(df.chronic)
+# summary(df.chronic)
 # summary(df.chronic$State)
 # summary(df.chronic$Region)
 
 #proposal: association between variables and outcome, clear y, x 
 #model selection: aic, model assumption 
-```
 
-```{r}
-# library(DataExplorer)
-# library(magrittr)
-# #eda<-eda %>% select(shape,price,carat,cut,color,clarity,report,type)
-# plot_histogram(df.chronic)
-# plot_bar(df.chronic) 
-```
 
-```{r,out.width="50%"}
-# df_numeric <- df.chronic %>%  select_if(is.numeric)
-# cor.numeric <- cor(df_numeric, use = "complete.obs")
-# cor.numeric
+# Level 1: State
+# Level 2: Region
 ```
 
 ```{r}
@@ -127,4 +118,37 @@ df.chronic %>%
        y = "Variance of Number of Region") +
   theme_minimal()
 ```
+
+```{r}
+cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "System", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
+
+df.chronic <- df.chronic %>% select(-cols_to_drop)
+```
+
+
+```{r}
+df.chronic[df.chronic<0] <- NA
+df.chronic <- df.chronic %>% drop_na()
+```
+
+```{r}
+df.chronic %>%
+  select(-State) %>%
+  group_by(Region) %>%
+  summarize_all(~mean(., na.rm = TRUE))
+```
+
+```{r}
+df.summary<-df.chronic %>% select(-c(State)) %>%
+  tbl_summary(missing="no",
+              by = Region, 
+              type = list(where(is.numeric) ~ "continuous"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% add_p()%>%
+  modify_caption("Summary of Variables by Region")
+df.summary
+```
+
+
+
+
 
