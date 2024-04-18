@@ -2,5 +2,7 @@
 
 .Rproj.user
 *.Rproj
+.RData
+.RHistory
 
 .DS_Store
