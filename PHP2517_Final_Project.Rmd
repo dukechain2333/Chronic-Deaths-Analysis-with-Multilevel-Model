@@ -35,6 +35,10 @@ df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
 #https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
 #Note: 1 state is US(unsure), so remove that obervation
 
+# Since the column `Hospice Days per Decedent during the Last Six Months of Life` is mislabed, we will remove it from the data
+
+df.chronic <- df.chronic %>% select(-`Hospice Days per Decedent during the Last Six Months of Life`)
+
 df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>% 
   mutate(across(.cols = c(
   `SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life`,
@@ -48,8 +52,7 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
   `High-Intensity ICU Days per Decedent during the Last Six Months of Life`,
   `Intermediate-Intensity ICU Days per Decedent during the Last Six Months of Life`,
   `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`,
-  `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`,
-  `Hospice Days per Decedent during the Last Six Months of Life`),~as.numeric(.)))%>%
+  `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`),~as.numeric(.)))%>%
   mutate(Region = case_when(State %in% c("CT","ME","MA","NH","RI","VT","NJ","NY","PA") ~ "Northeast",
                             State %in% c("IN","IL","MI","OH","WI","IA","KS","MN","MO","NE","ND","SD") ~ "Midwest",
                             State %in% c("DE","DC","FL","GA","MD","NC","SC","VA","WV","AL","KY","MS","TN","AR","LA","OK","TX") ~ "South",
@@ -162,7 +165,7 @@ cor.df.numeric <- cor(df.numeric, use = "complete.obs")
 #https://stackoverflow.com/questions/20030646/reformat-a-correlation-matrix-in-r-to-remove-row-names-column-names-and-cells
 dat <- as.matrix(cor.df.numeric)
 dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
-dat[upper.tri(dat)] <- NA
+dat[upper.tri(dat)] <- 0
 print(dat, na.print = " ") 
 
 library(corrplot)
@@ -172,7 +175,6 @@ corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.mai
 
 #https://r-graph-gallery.com/74-margin-and-oma-cheatsheet.html
 ```
-
 
 
 
