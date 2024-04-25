@@ -70,7 +70,6 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
 ```
 
 ```{r}
-library(dplyr)
 library(kableExtra)
 
 overall_summary <- df.chronic %>%
