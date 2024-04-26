@@ -22,6 +22,8 @@ set.seed(123)
 library(tidyr)       ## Used to tidy data
 library(dplyr)       ## Used to manipulate data
 library(gtsummary)
+library('caret')
+library(corrplot)
 ```
 
 ```{r}
@@ -34,6 +36,10 @@ df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
 #https://www.bu.edu/brand/guidelines/editorial-style/us-state-abbreviations/
 #https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
 #Note: 1 state is US(unsure), so remove that obervation
+
+# Since the column `Hospice Days per Decedent during the Last Six Months of Life` is mislabed, we will remove it from the data
+
+df.chronic <- df.chronic %>% select(-`Hospice Days per Decedent during the Last Six Months of Life`)
 
 df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>% 
   mutate(across(.cols = c(
@@ -48,8 +54,7 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
   `High-Intensity ICU Days per Decedent during the Last Six Months of Life`,
   `Intermediate-Intensity ICU Days per Decedent during the Last Six Months of Life`,
   `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`,
-  `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`,
-  `Hospice Days per Decedent during the Last Six Months of Life`),~as.numeric(.)))%>%
+  `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`),~as.numeric(.)))%>%
   mutate(Region = case_when(State %in% c("CT","ME","MA","NH","RI","VT","NJ","NY","PA") ~ "Northeast",
                             State %in% c("IN","IL","MI","OH","WI","IA","KS","MN","MO","NE","ND","SD") ~ "Midwest",
                             State %in% c("DE","DC","FL","GA","MD","NC","SC","VA","WV","AL","KY","MS","TN","AR","LA","OK","TX") ~ "South",
@@ -68,6 +73,24 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
 # Level 1: State
 # Level 2: Region
 ```
+
+```{r}
+# check which cols have na values
+na_cols <- colnames(df.chronic)[colSums(is.na(df.chronic)) > 0]
+
+# check the ratio of NAs in these columns
+na_ratio <- colSums(is.na(df.chronic[na_cols])) / nrow(df.chronic)
+na_ratio
+```
+
+```{r}
+# since `System` has 20% missing values, we are going to remove this column
+df.chronic <- df.chronic %>% select(-System)
+
+# `Ambulance spending per Decedent during the last two years of life` has 0.4% missing values, we are going to remove these rows
+df.chronic <- df.chronic %>% drop_na(`Ambulance spending per Decedent during the last two years of life`)
+```
+
 
 ```{r}
 library(kableExtra)
@@ -91,6 +114,8 @@ overall_summary %>%
   col.names=linebreak(c("Region", "State", "N", "Total", "Mean", "SD", "Median", "Min", "Max")),
   booktabs=T, escape=F, align = "c") %>%
 kable_styling(full_width = FALSE, latex_options = c('hold_position'))
+
+overall_summary
 ```
 
 ```{r}
@@ -119,7 +144,7 @@ df.chronic %>%
 ```
 
 ```{r}
-cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "System", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
+cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
 
 df.chronic <- df.chronic %>% select(-cols_to_drop)
 ```
@@ -149,30 +174,41 @@ df.summary
 ```
 
 ```{r}
+
+plot_correlation <- function(df){
+  dat <- as.matrix(df)
+  dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
+  dat[upper.tri(dat)] <- 0
+  
+  corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+}
+```
+
+```{r}
 df.numeric <- df.chronic %>%  select_if(is.numeric)
+df.cat <- df.chronic  %>% select_if(is.factor)
+
 cor.df.numeric <- cor(df.numeric, use = "complete.obs")
-# library(corrplot)
-# corrplot(cor(cor.df.numeric),
-#   method = "number",
-#   type = "upper" # show only upper side
-# )
-#corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-
-
-#https://stackoverflow.com/questions/20030646/reformat-a-correlation-matrix-in-r-to-remove-row-names-column-names-and-cells
-dat <- as.matrix(cor.df.numeric)
-dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
-dat[upper.tri(dat)] <- NA
-print(dat, na.print = " ") 
-
-library(corrplot)
-#corrplot(dat, method = "number", type = "lower" , title="Correlation Plot", mar=c(0,0,1,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-#corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-
-#https://r-graph-gallery.com/74-margin-and-oma-cheatsheet.html
+plot_correlation(cor.df.numeric)
 ```
 
 
+```{r}
+# remove highly correlated variables
+hc <- findCorrelation(cor.df.numeric, cutoff=0.3)
+hc <- sort(hc)
+df.numeric <- df.numeric[,-c(hc)]
+
+cor.df.numeric <- cor(df.numeric, use = "complete.obs")
+plot_correlation(cor.df.numeric)
+
+# combine it with categorical variables
+df.cat <- df.chronic  %>% select_if(is.factor)
+
+df.chronic <- cbind(df.cat, df.numeric)
+
+colnames(df.chronic)
+
+```
 
 
