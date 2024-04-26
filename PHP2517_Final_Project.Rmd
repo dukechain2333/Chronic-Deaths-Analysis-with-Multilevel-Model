@@ -35,6 +35,13 @@ df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
 #https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
 #Note: 1 state is US(unsure), so remove that observation
 
+<<<<<<< Updated upstream
+=======
+# Since the column `Hospice Days per Decedent during the Last Six Months of Life` is mislabeled, we will remove it from the data
+
+df.chronic <- df.chronic %>% select(-`Hospice Days per Decedent during the Last Six Months of Life`)
+
+>>>>>>> Stashed changes
 df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>% 
   mutate(across(.cols = c(
   `SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life`,
@@ -58,18 +65,64 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
   filter(!is.na(Region))
 
 # summary(df.chronic)
+<<<<<<< Updated upstream
+=======
+#summary(df.chronic$`HRR Name`)
+>>>>>>> Stashed changes
 # summary(df.chronic$State)
 # summary(df.chronic$Region)
 
 #proposal: association between variables and outcome, clear y, x 
 #model selection: aic, model assumption 
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 # Level 1: State
 # Level 2: Region
 ```
 
 ```{r}
+<<<<<<< Updated upstream
+=======
+# check which cols have na values
+na_cols <- colnames(df.chronic)[colSums(is.na(df.chronic)) > 0]
+
+# check the ratio of NAs in these columns
+na_ratio <- colSums(is.na(df.chronic[na_cols])) / nrow(df.chronic)
+na_ratio
+```
+
+```{r}
+#https://www.dartmouthatlas.org/interactive-apps/hospital-care-intensity/
+cor(df.chronic$`Percent of enrollees medical inpatient days at hospital to which they were assigned`,df.chronic$`Hospital Care Intensity Index during the Last Two Years of Life`)
+```
+
+```{r}
+# library(DataExplorer)
+# library(magrittr)
+# #eda<-eda %>% select(shape,price,carat,cut,color,clarity,report,type)
+# plot_histogram(df.chronic)
+# plot_bar(df.chronic) 
+```
+
+```{r,out.width="50%"}
+# df.numeric <- df.chronic %>%  select_if(is.numeric)
+# cor.numeric <- cor(df.numeric, use = "complete.obs")
+# cor.numeric
+```
+
+```{r}
+# since `System` has 20% missing values, we are going to remove this column
+df.chronic <- df.chronic %>% select(-System)
+
+# `Ambulance spending per Decedent during the last two years of life` has 0.4% missing values, we are going to remove these rows
+df.chronic <- df.chronic %>% drop_na(`Ambulance spending per Decedent during the last two years of life`)
+```
+
+```{r}
+>>>>>>> Stashed changes
 library(kableExtra)
 
 overall_summary <- df.chronic %>%
@@ -124,7 +177,6 @@ cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "Sy
 df.chronic <- df.chronic %>% select(-cols_to_drop)
 ```
 
-
 ```{r}
 df.chronic[df.chronic<0] <- NA
 # add check for proportion of zeros in each column!!!
@@ -149,6 +201,19 @@ df.summary
 ```
 
 ```{r}
+<<<<<<< Updated upstream
+=======
+plot_correlation <- function(df){
+  dat <- as.matrix(df)
+  dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
+  dat[upper.tri(dat)] <- 0
+  
+  corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+}
+```
+
+```{r}
+>>>>>>> Stashed changes
 df.numeric <- df.chronic %>%  select_if(is.numeric)
 cor.df.numeric <- cor(df.numeric, use = "complete.obs")
 # library(corrplot)
@@ -174,5 +239,48 @@ corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.mai
 ```
 
 
+<<<<<<< Updated upstream
+=======
+```{r}
+# remove highly correlated variables
+hc <- findCorrelation(cor.df.numeric, cutoff=0.3)
+hc <- sort(hc)
+df.numeric <- df.numeric[,-c(hc)]
 
+cor.df.numeric <- cor(df.numeric, use = "complete.obs")
+plot_correlation(cor.df.numeric)
 
+# combine it with categorical variables
+df.cat <- df.chronic  %>% select_if(is.factor)
+
+df.chronic <- cbind(df.cat, df.numeric)
+
+colnames(df.chronic)
+```
+```{r}
+df.chronic %>%
+  select(-State) %>%
+  group_by(Region) %>%
+  summarize_all(~mean(., na.rm = TRUE))
+```
+>>>>>>> Stashed changes
+
+```{r}
+df.summary<-df.chronic %>% select(-c(State)) %>%
+  tbl_summary(missing="no",
+              by = Region, 
+              type = list(where(is.numeric) ~ "continuous"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% add_p()%>%
+  modify_caption("Summary of Variables by Region")
+df.summary
+```
+
+```{r}
+df.summary<-df.chronic %>% select(-c(Region)) %>%
+  tbl_summary(missing="no",
+              by = State, 
+              type = list(where(is.numeric) ~ "continuous"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% add_p()%>%
+  modify_caption("Summary of Variables by Region")
+df.summary
+```
