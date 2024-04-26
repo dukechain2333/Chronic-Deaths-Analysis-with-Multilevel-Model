@@ -62,13 +62,18 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
          Region = factor(Region))%>% 
   filter(!is.na(Region))
 
+<<<<<<< Updated upstream
 # summary(df.chronic)
+=======
+summary(df.chronic$`HRR Name`)
+>>>>>>> Stashed changes
 # summary(df.chronic$State)
 # summary(df.chronic$Region)
 
 #proposal: association between variables and outcome, clear y, x 
 #model selection: aic, model assumption 
 
+<<<<<<< Updated upstream
 
 # Level 1: State
 # Level 2: Region
@@ -81,6 +86,28 @@ na_cols <- colnames(df.chronic)[colSums(is.na(df.chronic)) > 0]
 # check the ratio of NAs in these columns
 na_ratio <- colSums(is.na(df.chronic[na_cols])) / nrow(df.chronic)
 na_ratio
+=======
+```
+
+```{r}
+#https://www.dartmouthatlas.org/interactive-apps/hospital-care-intensity/
+cor(df.chronic$`Percent of enrollees medical inpatient days at hospital to which they were assigned`,df.chronic$`Hospital Care Intensity Index during the Last Two Years of Life`)
+```
+
+
+```{r}
+# library(DataExplorer)
+# library(magrittr)
+# #eda<-eda %>% select(shape,price,carat,cut,color,clarity,report,type)
+# plot_histogram(df.chronic)
+# plot_bar(df.chronic) 
+```
+
+```{r,out.width="50%"}
+# df.numeric <- df.chronic %>%  select_if(is.numeric)
+# cor.numeric <- cor(df.numeric, use = "complete.obs")
+# cor.numeric
+>>>>>>> Stashed changes
 ```
 
 ```{r}
