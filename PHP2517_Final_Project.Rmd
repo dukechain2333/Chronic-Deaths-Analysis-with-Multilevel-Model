@@ -175,7 +175,6 @@ df.summary
 ```
 
 ```{r}
-
 plot_correlation <- function(df){
   dat <- as.matrix(df)
   dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
@@ -192,7 +191,6 @@ df.cat <- df.chronic  %>% select_if(is.factor)
 cor.df.numeric <- cor(df.numeric, use = "complete.obs")
 plot_correlation(cor.df.numeric)
 ```
-
 
 ```{r}
 # remove highly correlated variables
@@ -211,6 +209,7 @@ df.chronic <- cbind(df.cat, df.numeric)
 col.df<-colnames(df.chronic)
 col.df
 ```
+
 ```{r}
 df.summary.region<-df.chronic %>% select(-c(State)) %>%
   tbl_summary(missing="no",
@@ -231,7 +230,45 @@ df.summary.state<-df.chronic %>% select(-c(Region)) %>%
 df.summary.state
 ```
 
+$Y_{ij}\sim N(\beta_j, \sigma^2), \beta_j\sim N(\mu,\tau^2)$ 
+
 ```{r}
-tapply(df.chronic$age, data$subjects, summary)
+library(lme4)
+m1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+(1|State),data=df.chronic)
+summ1<-summary(m1)
 ```
+
+* Summary table
+```{r}
+VarCorr(m1)
+```
+
+```{r}
+summ1$coefficients
+```
+
+```{r}
+m2<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+(1|Region),data=df.chronic)
+summ2<-summary(m2)
+```
+
+* Summary table
+```{r}
+VarCorr(m2)
+```
+
+```{r}
+summ2$coefficients
+```
+
+```{r}
+AIC(m1,m2)
+```
+
+Because m1 has a slighly lower AIC value, m1 is the better model. Intercept variance = (35.544)^2 = 1263.376 represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = (219.670)^2 = 48254.91 represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
+
+
+
+
+
 
