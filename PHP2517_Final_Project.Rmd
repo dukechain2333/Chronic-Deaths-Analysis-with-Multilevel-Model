@@ -268,7 +268,7 @@ AIC(m1,m2)
 Because m1 has a slighly lower AIC value, m1 is the better model. Intercept variance = (35.544)^2 = 1263.376 represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = (219.670)^2 = 48254.91 represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
 
 
+# Code Appendix
 
-
-
-
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
