@@ -22,6 +22,8 @@ set.seed(123)
 library(tidyr)       ## Used to tidy data
 library(dplyr)       ## Used to manipulate data
 library(gtsummary)
+library('caret')
+library(corrplot)
 ```
 
 ```{r}
@@ -172,29 +174,41 @@ df.summary
 ```
 
 ```{r}
-df.numeric <- df.chronic %>%  select_if(is.numeric)
-cor.df.numeric <- cor(df.numeric, use = "complete.obs")
-# library(corrplot)
-# corrplot(cor(cor.df.numeric),
-#   method = "number",
-#   type = "upper" # show only upper side
-# )
-#corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
 
-
-#https://stackoverflow.com/questions/20030646/reformat-a-correlation-matrix-in-r-to-remove-row-names-column-names-and-cells
-dat <- as.matrix(cor.df.numeric)
-dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
-dat[upper.tri(dat)] <- 0
-print(dat, na.print = " ") 
-
-library(corrplot)
-#corrplot(dat, method = "number", type = "lower" , title="Correlation Plot", mar=c(0,0,1,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-#corrplot(cor.core_temp_numeric, title="Correlation Plot", mar=c(0,0,2,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-
-#https://r-graph-gallery.com/74-margin-and-oma-cheatsheet.html
+plot_correlation <- function(df){
+  dat <- as.matrix(df)
+  dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
+  dat[upper.tri(dat)] <- 0
+  
+  corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+}
 ```
 
+```{r}
+df.numeric <- df.chronic %>%  select_if(is.numeric)
+df.cat <- df.chronic  %>% select_if(is.factor)
+
+cor.df.numeric <- cor(df.numeric, use = "complete.obs")
+plot_correlation(cor.df.numeric)
+```
+
+
+```{r}
+# remove highly correlated variables
+hc <- findCorrelation(cor.df.numeric, cutoff=0.3)
+hc <- sort(hc)
+df.numeric <- df.numeric[,-c(hc)]
+
+cor.df.numeric <- cor(df.numeric, use = "complete.obs")
+plot_correlation(cor.df.numeric)
+
+# combine it with categorical variables
+df.cat <- df.chronic  %>% select_if(is.factor)
+
+df.chronic <- cbind(df.cat, df.numeric)
+
+colnames(df.chronic)
+
+```
 
 
