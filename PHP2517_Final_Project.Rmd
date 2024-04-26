@@ -208,7 +208,8 @@ df.cat <- df.chronic  %>% select_if(is.factor)
 
 df.chronic <- cbind(df.cat, df.numeric)
 
-colnames(df.chronic)
+col.df<-colnames(df.chronic)
+col.df
 ```
 ```{r}
 df.summary.region<-df.chronic %>% select(-c(State)) %>%
@@ -229,3 +230,8 @@ df.summary.state<-df.chronic %>% select(-c(Region)) %>%
   modify_caption("Summary of Variables by State")
 df.summary.state
 ```
+
+```{r}
+tapply(df.chronic$age, data$subjects, summary)
+```
+
