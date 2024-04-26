@@ -60,7 +60,8 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
                             State %in% c("DE","DC","FL","GA","MD","NC","SC","VA","WV","AL","KY","MS","TN","AR","LA","OK","TX") ~ "South",
                             State %in% c("AZ","CO","ID","NM","MT","UT","NV","WY","AK","CA","HI","OR","WA") ~ "West"),
          Region = factor(Region))%>% 
-  filter(!is.na(Region))
+  filter(State!="US")
+  # filter(!is.na(Region))
 
 # summary(df.chronic)
 # summary(df.chronic$State)
