@@ -33,7 +33,7 @@ df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
 #relevel: first level is state, second level is region
 #https://www.bu.edu/brand/guidelines/editorial-style/us-state-abbreviations/
 #https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
-#Note: 1 state is US(unsure), so remove that obervation
+#Note: 1 state is US(unsure), so remove that observation
 
 df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>% 
   mutate(across(.cols = c(
