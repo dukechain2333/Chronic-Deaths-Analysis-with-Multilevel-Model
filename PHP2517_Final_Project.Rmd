@@ -73,6 +73,24 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
 ```
 
 ```{r}
+# check which cols have na values
+na_cols <- colnames(df.chronic)[colSums(is.na(df.chronic)) > 0]
+
+# check the ratio of NAs in these columns
+na_ratio <- colSums(is.na(df.chronic[na_cols])) / nrow(df.chronic)
+na_ratio
+```
+
+```{r}
+# since `System` has 20% missing values, we are going to remove this column
+df.chronic <- df.chronic %>% select(-System)
+
+# `Ambulance spending per Decedent during the last two years of life` has 0.4% missing values, we are going to remove these rows
+df.chronic <- df.chronic %>% drop_na(`Ambulance spending per Decedent during the last two years of life`)
+```
+
+
+```{r}
 library(kableExtra)
 
 overall_summary <- df.chronic %>%
@@ -94,6 +112,8 @@ overall_summary %>%
   col.names=linebreak(c("Region", "State", "N", "Total", "Mean", "SD", "Median", "Min", "Max")),
   booktabs=T, escape=F, align = "c") %>%
 kable_styling(full_width = FALSE, latex_options = c('hold_position'))
+
+overall_summary
 ```
 
 ```{r}
@@ -122,7 +142,7 @@ df.chronic %>%
 ```
 
 ```{r}
-cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "System", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
+cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
 
 df.chronic <- df.chronic %>% select(-cols_to_drop)
 ```
