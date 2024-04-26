@@ -208,7 +208,23 @@ df.cat <- df.chronic  %>% select_if(is.factor)
 df.chronic <- cbind(df.cat, df.numeric)
 
 colnames(df.chronic)
-
+```
+```{r}
+df.summary.region<-df.chronic %>% select(-c(State)) %>%
+  tbl_summary(missing="no",
+              by = Region, 
+              type = list(where(is.numeric) ~ "continuous"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% add_p()%>%
+  modify_caption("Summary of Variables by Region")
+df.summary.region
 ```
 
-
+```{r}
+df.summary.state<-df.chronic %>% select(-c(Region)) %>%
+  tbl_summary(missing="no",
+              by = State, 
+              type = list(where(is.numeric) ~ "continuous"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% add_p()%>%
+  modify_caption("Summary of Variables by State")
+df.summary.state
+```
