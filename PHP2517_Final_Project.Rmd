@@ -145,7 +145,8 @@ df.chronic %>%
 ```
 
 ```{r}
-cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "Hospital Name", "City", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
+#"Hospital Name"
+cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "City", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
 
 df.chronic <- df.chronic %>% select(-cols_to_drop)
 ```
@@ -165,7 +166,7 @@ df.chronic %>%
 ```
 
 ```{r}
-df.summary<-df.chronic %>% select(-c(State)) %>%
+df.summary<-df.chronic %>% select(-c(State,`Hospital Name`)) %>%
   tbl_summary(missing="no",
               by = Region, 
               type = list(where(is.numeric) ~ "continuous"),
@@ -211,7 +212,7 @@ col.df
 ```
 
 ```{r}
-df.summary.region<-df.chronic %>% select(-c(State)) %>%
+df.summary.region<-df.chronic %>% select(-c(State,`Hospital Name`)) %>%
   tbl_summary(missing="no",
               by = Region, 
               type = list(where(is.numeric) ~ "continuous"),
@@ -221,7 +222,7 @@ df.summary.region
 ```
 
 ```{r}
-df.summary.state<-df.chronic %>% select(-c(Region)) %>%
+df.summary.state<-df.chronic %>% select(-c(Region,`Hospital Name`)) %>%
   tbl_summary(missing="no",
               by = State, 
               type = list(where(is.numeric) ~ "continuous"),
@@ -266,6 +267,75 @@ AIC(m1,m2)
 ```
 
 Because m1 has a slighly lower AIC value, m1 is the better model. Intercept variance = (35.544)^2 = 1263.376 represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = (219.670)^2 = 48254.91 represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
+
+```{r}
+#???
+m.full<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                       `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
+               (1|State)+
+               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
+               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
+               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
+summ.full<-summary(m.full)
+```
+
+```{r}
+library(lmerTest)
+step(m.full)#backward selection for random effects
+```
+
+```{r}
+#remove random intercepts???
+m.best<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~ 
+               `Other spending per Decedent during the last two years of life` + 
+               `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` + 
+               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` + 
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)` + 
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` + 
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` + 
+               (0 + `Other spending per Decedent during the last two years of life` | `Hospital Name`) + 
+               (0 + `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
+               (0 + `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
+               (0 + `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
+               (0 + `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` |      `Hospital Name`) + 
+               (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) + 
+               (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
+               (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
+               (0 + `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
+summ.best<-summary(m.best)
+```
+
+* Fixed effects:
+
+```{r}
+m.fixef<-fixef(m.best)
+m.fixef
+```
+
+* Random effects for first 5 hospitals:
+
+```{r}
+m.ranef<-ranef(m.best)[[1]]
+m.ranef[1:5,]
+```
+
+```{r}
+#TODO: plot predicted value, redo hw2,hw3 plots
+```
 
 
 # Code Appendix
