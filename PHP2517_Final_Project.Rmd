@@ -24,6 +24,7 @@ library(dplyr)       ## Used to manipulate data
 library(gtsummary)
 library('caret')
 library(corrplot)
+library(lmerTest)
 ```
 
 ```{r}
@@ -294,8 +295,7 @@ summ.full<-summary(m.full)
 ```
 
 ```{r}
-library(lmerTest)
-step(m.full)#backward selection for random effects
+model <- step(m.full)#backward selection for random effects
 ```
 
 ```{r}
