@@ -295,28 +295,29 @@ summ.full<-summary(m.full)
 ```
 
 ```{r}
-step(m.full)#backward selection for random effects
+(step_res <- step(m.full))
+m.best <- get_model(step_res)
 ```
 
 ```{r}
 #remove random intercepts???
-m.best<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~ 
-               `Other spending per Decedent during the last two years of life` + 
-               `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` + 
-               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` + 
-               `Standardized FTE physician labor: Ratio MS/PC (calculated)` + 
-               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` + 
-               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` + 
-               (0 + `Other spending per Decedent during the last two years of life` | `Hospital Name`) + 
-               (0 + `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
-               (0 + `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
-               (0 + `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
-               (0 + `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` |      `Hospital Name`) + 
-               (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) + 
-               (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
-               (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
-               (0 + `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
-summ.best<-summary(m.best)
+# m.best<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~ 
+#                `Other spending per Decedent during the last two years of life` + 
+#                `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` + 
+#                `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` + 
+#                `Standardized FTE physician labor: Ratio MS/PC (calculated)` + 
+#                `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` + 
+#                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` + 
+#                (0 + `Other spending per Decedent during the last two years of life` | `Hospital Name`) + 
+#                (0 + `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
+#                (0 + `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
+#                (0 + `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
+#                (0 + `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` |      `Hospital Name`) + 
+#                (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) + 
+#                (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
+#                (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
+#                (0 + `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
+# summ.best<-summary(m.best)
 ```
 
 * Fixed effects:
@@ -329,19 +330,40 @@ m.fixef
 * Random effects for first 5 hospitals:
 
 ```{r}
-m.ranef<-ranef(m.best)[[1]]
-m.ranef[1:5,]
+m.ranef.hospital<-ranef(m.best)[[1]]
+m.ranef.state <- ranef(m.best)[[2]]
 ```
 
 ```{r}
 #TODO: plot predicted value, redo hw2,hw3 plots
-m.best.predict <- predict(m.best)
-
-# Find the mse:
-mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - m.best.predict)^2)
 ```
 
 ```{r}
+m.best.predict <- predict(m.best)
+
+# Find the mse
+mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - m.best.predict)^2)
+mse
+```
+
+```{r}
+df.chronic.filter <- df.chronic %>% 
+  filter(`Hospital Name` %in% row.names(m.ranef.hospital))
+
+m.ranef.hospital.altered <- m.ranef.hospital %>% 
+  rename_with(~paste0("RE-", gsub("`", "", .)), everything()) %>%
+  rownames_to_column(var = "Hospital Name")
+
+m.ranef.state.altered <- m.ranef.state %>% 
+  rename("RE-State" = "(Intercept)") %>%
+  rownames_to_column(var = "State")
+
+result_df <- inner_join(df.chronic.filter, m.ranef.hospital.altered, by = "Hospital Name")
+result_df <- inner_join(result_df, m.ranef.state.altered, by = "State")
+result_df$predicted <- predict(m.best, newdata = df.chronic.filter)
+
+names(result_df)
+head(result_df)
 ```
 
 
