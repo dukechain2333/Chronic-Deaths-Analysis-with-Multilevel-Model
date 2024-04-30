@@ -27,6 +27,16 @@ library(corrplot)
 library(lmerTest)
 ```
 
+# Introduction
+
+According to [1], chronic diseases are severe conditions that can get worse over time. Their controllable but not curable feature pose significant challenges to public health systems [1]. Common conditions, including “cancer, heart disease, stroke, diabetes, and arthritis,” not only lead to prolonged illness but also contribute substantially to the economic burden faced by societies [1]. Traditional epidemiological studies utilize simple statistical models that might not account for the complexity of state-level and region-level determinants of health. As a result, there is a pressing need for more sophisticated analytical approaches to provide a deeper understanding of the factors influencing chronic disease mortality.
+
+Multilevel modeling (MLM), or hierarchical linear modeling, offers a robust statistical framework for analyzing data structures at multiple levels. This approach is particularly suitable for public health research, where data often involve nested structures, such as patients within hospitals. MLM allows researchers to explore the impact of different level predictors and how these effects vary across groups. This study aims to employ multilevel models to analyze chronic disease mortality data, focusing on identifying critical state-level and region-level predictors. By integrating multiple levels of data, this research seeks to uncover potential targets for intervention that could mitigate the risk factors associated with chronic diseases. 
+
+# Data
+
+Our data come from the Dartmouth Atlas Project [2]. This site offers access to decades of Medicare data and supplemental materials. Our data are from 2019 and initially have 68 covariates. In terms of data preprocessing, we first look through all variables and try to identify variables with similar meanings. To the best of our knowledge, we only keep variables that have distinct meanings and remove other variables with duplicated information. For example, when we retain variables of `Ratio to the U.S. Average`, we remove the corresponding variables that record the actual numbers. After we choose the `Total` variables, we drop the other variables related to sub-categories. In addition, we remove the `System` variable due to a large proportion (20%) of missing values in in its column. There is an error with the variable `Hospice Days per Decedent during the Last Six Months of Life`, it is more likely to refer to reimbursements than days (data summary has a mean = 1091, min = 1, max = 2180, similar to summaries of other reimbursement variables). So we drop this variable as well. The last step of data cleaning is removing rows with NA values. The final dataset involves 2174 observations and 32 variables: 2 categorical variables are State and Region, and the rest are all numeric. Our outcome in this project is “Number of deaths among chronically ill patients assigned to hospital.” We are concerned about the predictability of both longer-term (two years) and the shorter-term (six months) variables on our outcome of interest. 
+
 ```{r}
 library(readxl)
 df.chronic <-read_excel('hosp_eolchronic_dead6699ffs_2019.xlsx')
@@ -67,13 +77,6 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
 # summary(df.chronic)
 # summary(df.chronic$State)
 # summary(df.chronic$Region)
-
-#proposal: association between variables and outcome, clear y, x 
-#model selection: aic, model assumption 
-
-
-# Level 1: State
-# Level 2: Region
 ```
 
 ```{r}
@@ -82,7 +85,7 @@ na_cols <- colnames(df.chronic)[colSums(is.na(df.chronic)) > 0]
 
 # check the ratio of NAs in these columns
 na_ratio <- colSums(is.na(df.chronic[na_cols])) / nrow(df.chronic)
-na_ratio
+#na_ratio
 ```
 
 ```{r}
@@ -93,12 +96,24 @@ df.chronic <- df.chronic %>% select(-System)
 df.chronic <- df.chronic %>% drop_na(`Ambulance spending per Decedent during the last two years of life`)
 ```
 
+```{r}
+#"Hospital Name"
+cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "City", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
+
+df.chronic <- df.chronic %>% select(-cols_to_drop)
+```
+
+```{r}
+df.chronic[df.chronic<0] <- NA
+# add check for proportion of zeros in each column!!!
+df.chronic <- df.chronic %>% drop_na()
+```
 
 ```{r}
 library(kableExtra)
 
 overall_summary <- df.chronic %>%
-  group_by(Region, State) %>% 
+  group_by(Region, State) %>%
   summarise(
   n = (length(`Number of deaths among chronically ill patients assigned to hospital`)-sum(is.na(`Number of deaths among chronically ill patients assigned to hospital`))),
   total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T),
@@ -117,9 +132,8 @@ overall_summary %>%
   booktabs=T, escape=F, align = "c") %>%
 kable_styling(full_width = FALSE, latex_options = c('hold_position'))
 
-overall_summary
+#overall_summary
 ```
-
 ```{r}
 df.chronic %>%
   group_by(State) %>%
@@ -146,24 +160,10 @@ df.chronic %>%
 ```
 
 ```{r}
-#"Hospital Name"
-cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "City", "Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life", "SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life", "Home Health Sector Reimbursements per Decedent during the Last Two Years of Life", "Hospice Sector Reimbursements per Decedent during the Last Two Years of Life", "Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Ambulance spending per Decedent during the last two years of life", "Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life","Part B Spending for Procedures per Decedent during the Last Two Years of Life", "Part B Spending for Imaging per Decedent during the Last Two Years of Life", "Part B Spending for Tests per Decedent during the Last Two Years of Life", "Other Part B spending per Decedent during the last two years of life", "Inpatient Days per Decedent during the Last Two Years of Life", "Reimbursements per patient day (calculated)", "Reimbursements per Day: Ratio to US Average (calculated)", "Hospital reimbursements per Decedent during the last two years of life", "Payments per physician visit (calculated)", "Payments for physician visits per Decedent during the last two years of life", "Physician Visits per Decedent during the Last Two Years of Life", "Payments per visit: Ratio to US Average (calculated)", "FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life", "Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life", "Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life", "Percent of Deaths Occurring In Hospital", "Percent of Deaths Associated With ICU Admission", "Physician Visits per Decedent during the Last Six Months of Life", "Medical Specialist Visits per Decedent during the Last Six Months of Life", "Primary Care Visits per Decedent during the Last Six Months of Life", "Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life")
-
-df.chronic <- df.chronic %>% select(-cols_to_drop)
-```
-
-
-```{r}
-df.chronic[df.chronic<0] <- NA
-# add check for proportion of zeros in each column!!!
-df.chronic <- df.chronic %>% drop_na()
-```
-
-```{r}
-df.chronic %>%
-  select(-State) %>%
-  group_by(Region) %>%
-  summarize_all(~mean(., na.rm = TRUE))
+# df.chronic %>%
+#   select(-c(State, `Hospital Name`)) %>%
+#   group_by(Region) %>%
+#   summarize_all(~mean(., na.rm = TRUE))
 ```
 
 ```{r}
@@ -175,6 +175,7 @@ df.summary<-df.chronic %>% select(-c(State,`Hospital Name`)) %>%
   modify_caption("Summary of Variables by Region")
 df.summary
 ```
+In terms of the multilevel structure of the data, level 1 refers to the State, and level 2 is the Region (we manually convert states to four regions: Midwest, Southeast, South, and West). Based on barplots for `Variance of Number of deaths` by States and Region, we see an obvious difference between groups. Since there are many highly correlated variables, we decide to remove them using a threshold of 0.3. After this variable selection procedure, we are left with 13 variables in total. The `Summary of Variables` Table by Region and States indicate that variables are significantly different across groups. 
 
 ```{r}
 plot_correlation <- function(df){
@@ -182,11 +183,12 @@ plot_correlation <- function(df){
   dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
   dat[upper.tri(dat)] <- 0
   
-  corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+  corrplot(dat, type = "lower" , title="Correlation Plot",cex.main=0.7)
+    # corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
 }
 ```
 
-```{r}
+```{r,out.height="70%"}
 df.numeric <- df.chronic %>%  select_if(is.numeric)
 df.cat <- df.chronic  %>% select_if(is.factor)
 
@@ -232,6 +234,8 @@ df.summary.state<-df.chronic %>% select(-c(Region,`Hospital Name`)) %>%
 df.summary.state
 ```
 
+With regards to the multilevel structure of the data, level 1 refers to the State, and level 2 is the Region (we manually convert states to four regions: Midwest, Southeast, South, and West). After constructing models, we compare their AIC values to determine the better model. 
+
 $Y_{ij}\sim N(\beta_j, \sigma^2), \beta_j\sim N(\mu,\tau^2)$ 
 
 ```{r}
@@ -267,7 +271,7 @@ summ2$coefficients
 AIC(m1,m2)
 ```
 
-Because m1 has a slighly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
+Because m1 has a slightly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
 
 # Traditional Method (Without Variance)
 
@@ -530,6 +534,11 @@ names(result_df)
 head(result_df)
 ```
 
+# References
+
+[1] https://www.cancer.gov/publications/dictionaries/cancer-terms/def/chronic-disease
+
+[2] https://data.dartmouthatlas.org/eol-chronic/
 
 # Code Appendix
 
