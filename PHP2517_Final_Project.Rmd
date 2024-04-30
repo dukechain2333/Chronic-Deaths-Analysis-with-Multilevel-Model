@@ -236,7 +236,10 @@ df.summary.state
 
 With regards to the multilevel structure of the data, level 1 refers to the State, and level 2 is the Region (we manually convert states to four regions: Midwest, Southeast, South, and West). After constructing models, we compare their AIC values to determine the better model. 
 
-$Y_{ij}\sim N(\beta_j, \sigma^2), \beta_j\sim N(\mu,\tau^2)$ 
+$$
+Y_{ij}\sim N(\beta_j, \sigma^2),  \\
+\beta_j\sim N(\mu,\tau^2)
+$$ 
 
 ```{r}
 library(lme4)
@@ -271,9 +274,13 @@ summ2$coefficients
 AIC(m1,m2)
 ```
 
-Because m1 has a slightly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
+Because m1 has a slightly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the $j^{th}$ state.
 
-# Traditional Method (Without Variance)
+# Variable Selection through GLM
+
+We will start by using generalized linear models (GLM) to analyze the data. This step is mainly used to do the variable selection, and we will conduct a backward selection on the model to find out the variable that have the greatest influence on the outcome.
+
+We start with the full model, which includes `State`, `Other spending per Decedent during the last two years of life`, `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`, `Standardized FTE physician labor: Ratio MS/PC (calculated)`, `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`, `Home Health Agency Visits per Decedent during the Last Six Months of Life`, and `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` as predictors. `Number of deaths among chronically ill patients assigned to hospital` is the outcome variable.
 
 ```{r}
 glm.model.1 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
@@ -290,6 +297,9 @@ glm.model.1 <- glm(`Number of deaths among chronically ill patients assigned to 
 
 summary(glm.model.1)
 ```
+
+From the summary of `glm.model.1`, we can tell that `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` is not significant. We will remove this variable and fit the model again.
+
 ```{r}
 # remove `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from glm.model.1
 
@@ -307,6 +317,8 @@ glm.model.2 <- glm(`Number of deaths among chronically ill patients assigned to 
 summary(glm.model.2)
 ```
 
+From the summary of `glm.model.2`, we can tell that `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` is not significant. We will remove this variable and fit the model again.
+
 ```{r}
 # remove `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from glm.model.2
 
@@ -323,6 +335,8 @@ glm.model.3 <- glm(`Number of deaths among chronically ill patients assigned to 
 summary(glm.model.3)
 ```
 
+From the summary of `glm.model.3`, we can tell that `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` is not significant. We will remove this variable and fit the model again.
+
 ```{r}
 # remove `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` from glm.model.3
 
@@ -338,9 +352,15 @@ glm.model.4 <- glm(`Number of deaths among chronically ill patients assigned to 
 summary(glm.model.4)
 ```
 
-# Lmer (With Variance)
+By this step, we have removed all the variables that are not significant. The final model is `glm.model.4`, which includes `State`, `Other spending per Decedent during the last two years of life`, `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Standardized FTE physician labor: Ratio MS/PC (calculated)`, `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`, `Home Health Agency Visits per Decedent during the Last Six Months of Life`, and `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` as predictors.
 
-This part is based on the model that we obtained in GLM.
+# Adding Random Effect to the Model
+
+In the previous section, we have used GLM to do the variable selection. However, in the exploratory data analysis, we have found that there seems to be a difference between region and states, suggesting that a multilevel model might be more appropriate. Adding a random effect to the model can help us to account for the variance between groups, thus providing a more accurate estimate of the predictions.
+
+In this section, we will use the `lmer` function to fit a multilevel model to the data. However, different with the previous part, we will use a forward selection. We will start with the simplest model, which only includes the variables we found in the previous section. We will then add one variable at a time and use `anova` test to check the AIC value and p-values to determine if we will keep the variable in the model. For instance, if the p-value suggests that the two model are not significantly different, we will remove the variable from the model, in other words, we will keep the simple model with fewer variables when the two models are not significantly different. On the other hand, when the p-value suggests that the two models are significantly different, we will keep the more complex model with more variables (usually has a lower AIC value).
+
+We will start by adding the random effect on `State` to the model. The model is `lmer.model.1`.
 
 ```{r}
 lmer.model.1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -353,9 +373,14 @@ lmer.model.1<-lmer(`Number of deaths among chronically ill patients assigned to 
 
 summary(lmer.model.1)
 ```
+
+From the `anova` test we can clearly see that the model with random effect of `State` is significantly different from the model without random effect of `State`, and also have a lower AIC. Therefore, we will keep the random effect of `State` in the model.
+
 ```{r}
 anova(lmer.model.1, glm.model.4)
 ```
+
+Then, we will add the random effect on `Other spending per Decedent during the last two years of life` on `Hospital Name` level, which will makes the model `lmer.model.2`
 
 ```{r}
 lmer.model.2 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -371,10 +396,14 @@ lmer.model.2 <- lmer(`Number of deaths among chronically ill patients assigned t
 summary(lmer.model.2)
 ```
 
+From the `anova` test, we see that `lmer.model.2` is better than `lmer.model.1`, so we keep the random effect of `Other spending per Decedent during the last two years of life` from `lmer.model.2`.
+
 ```{r}
-# Model 2 is better than model 1, so we keep the random effect of `Other spending per Decedent during the last two years of life` from lmer.model.2
 anova(lmer.model.2, lmer.model.1)
+
 ```
+
+Next, we will add the random effect of `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` on `Hospital Name` level to the model, which will make the model `lmer.model.3`.
 
 ```{r}
 lmer.model.3 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -389,12 +418,16 @@ lmer.model.3 <- lmer(`Number of deaths among chronically ill patients assigned t
                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`), data=df.chronic)
 
 summary(lmer.model.3)
+
 ```
 
+From the `anova` test, we see that `lmer.model.3` is not significantly different from `lmer.model.2`, so we remove the random effect of `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from `lmer.model.3`.
+
 ```{r}
-# Model 3 is not differnt from model 2, so we remove the random effect of `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from lmer.model.3
 anova(lmer.model.3, lmer.model.2)
 ```
+
+Next, we will add the random effect of `Standardized FTE physician labor: Ratio MS/PC (calculated)` on `Hospital Name` level to the model, which will make the model `lmer.model.4`.
 
 ```{r}
 lmer.model.4 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -410,10 +443,15 @@ lmer.model.4 <- lmer(`Number of deaths among chronically ill patients assigned t
 
 summary(lmer.model.4)
 ```
+
+From the `anova` test, we see that `lmer.model.4` is better than `lmer.model.2`, so we keep the random effect of `Standardized FTE physician labor: Ratio MS/PC (calculated)` in `lmer.model.4`.
+
 ```{r}
 # model 4 is better than model 2, so we keep the random effect of `Standardized FTE physician labor: Ratio MS/PC (calculated)` in lmer.model.4
 anova(lmer.model.4, lmer.model.2)
 ```
+
+Next, we will add the random effect of `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` on `Hospital Name` level to the model, which will make the model `lmer.model.5`.
 
 ```{r}
 lmer.model.5 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -431,10 +469,14 @@ lmer.model.5 <- lmer(`Number of deaths among chronically ill patients assigned t
 summary(lmer.model.5)
 ```
 
+From the `anova` test, we see that `lmer.model.5` is not significantly different from `lmer.model.4`, so we remove the random effect of `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` in `lmer.model.5`.
+
 ```{r}
 # model 4 is not differnt from model 5, so we remove the random effect of `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` in lmer.model.5
 anova(lmer.model.5, lmer.model.4)
 ```
+
+Next, we will add the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` on `Hospital Name` level to the model, which will make the model `lmer.model.6`.
 
 ```{r}
 lmer.model.6 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -452,10 +494,14 @@ lmer.model.6 <- lmer(`Number of deaths among chronically ill patients assigned t
 summary(lmer.model.6)
 ```
 
+From the `anova` test, we see that `lmer.model.6` is not significantly different from `lmer.model.4`, so we remove the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in `lmer.model.6`.
+
 ```{r}
 # model 6 and model 4 don't have significant difference, so we remove the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in lmer.model.6
 anova(lmer.model.6, lmer.model.4)
 ```
+
+Next, we will add the random effect of `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` on `Hospital Name` level to the model, which will make the model `lmer.model.7`.
 
 ```{r}
 lmer.model.7 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
@@ -473,10 +519,16 @@ lmer.model.7 <- lmer(`Number of deaths among chronically ill patients assigned t
 summary(lmer.model.7)
 ```
 
+From the `anova` test, we see that `lmer.model.7` is not significantly different from `lmer.model.4`, so we remove the random effect of `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` in `lmer.model.7`.
+
 ```{r}
 # model 4 is not differnt from model 7, so we remove the random effect of `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` in lmer.model.7
 anova(lmer.model.7, lmer.model.4)
 ```
+
+Now, we find the optimal model is `lmer.model.4`, which includes fixed effect of `Other spending per Decedent during the last two years of life`, `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Standardized FTE physician labor: Ratio MS/PC (calculated)`, `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`, `Home Health Agency Visits per Decedent during the Last Six Months of Life`, and `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, and random effect of `Other spending per Decedent during the last two years of life` and `Standardized FTE physician labor: Ratio MS/PC (calculated)` on `Hospital Name` level, and an intercept on `State` level.
+
+# Model Comparison
 
 ```{r}
 lmer.model.best <- lmer.model.4
