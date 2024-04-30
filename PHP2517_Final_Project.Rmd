@@ -326,7 +326,7 @@ summary(glm.model.3)
 ```{r}
 # remove `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` from glm.model.3
 
-glm.model.3 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
+glm.model.4 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
                 State + 
                `Other spending per Decedent during the last two years of life`+
                `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
@@ -335,7 +335,7 @@ glm.model.3 <- glm(`Number of deaths among chronically ill patients assigned to 
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, data = df.chronic)
 
-summary(glm.model.3)
+summary(glm.model.4)
 ```
 
 # Lmer (With Variance)
@@ -354,7 +354,7 @@ lmer.model.1<-lmer(`Number of deaths among chronically ill patients assigned to 
 summary(lmer.model.1)
 ```
 ```{r}
-anova(lmer.model.1, glm.model.3)
+anova(lmer.model.1, glm.model.4)
 ```
 
 ```{r}
@@ -372,7 +372,7 @@ summary(lmer.model.2)
 ```
 
 ```{r}
-# Model 1 is better than model 2, so we remove the random effect of `Other spending per Decedent during the last two years of life` from lmer.model.2
+# Model 2 is better than model 1, so we keep the random effect of `Other spending per Decedent during the last two years of life` from lmer.model.2
 anova(lmer.model.2, lmer.model.1)
 ```
 
@@ -385,14 +385,15 @@ lmer.model.3 <- lmer(`Number of deaths among chronically ill patients assigned t
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
                 (1|State) +
+                (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`) +
                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`), data=df.chronic)
 
 summary(lmer.model.3)
 ```
 
 ```{r}
-# Model 3 is better than model 1, so we keep the random effect of `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` in lmer.model.3
-anova(lmer.model.3, lmer.model.1)
+# Model 3 is not differnt from model 2, so we remove the random effect of `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from lmer.model.3
+anova(lmer.model.3, lmer.model.2)
 ```
 
 ```{r}
@@ -404,14 +405,14 @@ lmer.model.4 <- lmer(`Number of deaths among chronically ill patients assigned t
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
                  (1|State) +
-                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
+                 (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`) +
                  (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`), data=df.chronic)
 
 summary(lmer.model.4)
 ```
 ```{r}
-# model 3 is better than model 4, so we remove the random effect of `Standardized FTE physician labor: Ratio MS/PC (calculated)` from lmer.model.4
-anova(lmer.model.4, lmer.model.3)
+# model 4 is better than model 2, so we keep the random effect of `Standardized FTE physician labor: Ratio MS/PC (calculated)` in lmer.model.4
+anova(lmer.model.4, lmer.model.2)
 ```
 
 ```{r}
@@ -423,15 +424,16 @@ lmer.model.5 <- lmer(`Number of deaths among chronically ill patients assigned t
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
                  (1|State) +
-                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
+                 (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`) +
+                 (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) +
                  (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
 
 summary(lmer.model.5)
 ```
 
 ```{r}
-# model 5 and model 3 don't have significant difference, so we keep the random effect of `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` in lmer.model.5
-anova(lmer.model.5, lmer.model.3)
+# model 4 is not differnt from model 5, so we remove the random effect of `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` in lmer.model.5
+anova(lmer.model.5, lmer.model.4)
 ```
 
 ```{r}
@@ -443,16 +445,16 @@ lmer.model.6 <- lmer(`Number of deaths among chronically ill patients assigned t
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
                  (1|State) +
-                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
-                 (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) +
+                  (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`) +
+                 (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) +
                  (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
 
 summary(lmer.model.6)
 ```
 
 ```{r}
-# model 6 and model 5 don't have significant difference, so we keep the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in lmer.model.6
-anova(lmer.model.6, lmer.model.5)
+# model 6 and model 4 don't have significant difference, so we remove the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in lmer.model.6
+anova(lmer.model.6, lmer.model.4)
 ```
 
 ```{r}
@@ -464,22 +466,21 @@ lmer.model.7 <- lmer(`Number of deaths among chronically ill patients assigned t
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
                  (1|State) +
-                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
-                 (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) +
-                 (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`) +
+                 (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`) +
+                 (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) +
                  (0 + `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
 
 summary(lmer.model.7)
 ```
 
 ```{r}
-# model 6 AIC value is lower than model 7, so we remove the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in lmer.model.7
-anova(lmer.model.7, lmer.model.6)
+# model 4 is not differnt from model 7, so we remove the random effect of `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` in lmer.model.7
+anova(lmer.model.7, lmer.model.4)
 ```
 
 ```{r}
-lmer.model.best <- lmer.model.6
-glm.model.best <- glm.model.3
+lmer.model.best <- lmer.model.4
+glm.model.best <- glm.model.4
 ```
 
 ```{r}
