@@ -25,7 +25,6 @@ library(gtsummary)
 library('caret')
 library(corrplot)
 library(lmerTest)
-library(tableone)
 ```
 
 ```{r}
@@ -270,17 +269,12 @@ AIC(m1,m2)
 
 Because m1 has a slighly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
 
-```{r}
-# vars_to_include <- setdiff(names(df.chronic), c("Hospital Name", "State", "Region"))
-# 
-# tab <- CreateTableOne(data=df.chronic, vars = vars_to_include, strata="State") 
-# kableone(tab)
-```
+# Traditional Method (Without Variance)
 
 ```{r}
-#???
-m.full<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
-                       `Other spending per Decedent during the last two years of life`+
+glm.model.1 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
+                State + 
+               `Other spending per Decedent during the last two years of life`+
                `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
                `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
                `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
@@ -288,164 +282,248 @@ m.full<-lmer(`Number of deaths among chronically ill patients assigned to hospit
                `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
                `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
-               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
-               (1|State)+
-               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
-               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
-               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
-summ.full<-summary(m.full)
-```
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, data = df.chronic)
 
+summary(glm.model.1)
+```
 ```{r}
-m.full.1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
-                       `Other spending per Decedent during the last two years of life`+
+# remove `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from glm.model.1
+
+glm.model.2 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
+                State + 
+               `Other spending per Decedent during the last two years of life`+
                `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
                `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
-               `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
                `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
                `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
                `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
-               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
-               (1|State)+
-               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
-               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
-               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, data = df.chronic)
 
-summary(m.full.1)
+summary(glm.model.2)
 ```
 
 ```{r}
-# Remove `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from m.full.1
+# remove `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from glm.model.2
 
-m.full.2<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
-                       `Other spending per Decedent during the last two years of life`+
-               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
-               `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
-               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
-               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
-               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
-               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
-               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
-               (1|State)+
-               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
-               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
-               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
-
-summary(m.full.2)
-```
-```{r}
-# Remove `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from m.full.2
-
-m.full.3<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
-                       `Other spending per Decedent during the last two years of life`+
+glm.model.3 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
+                State + 
+               `Other spending per Decedent during the last two years of life`+
                `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
                `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
                `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
                `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
                `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
-               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
-               (1|State)+
-               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
-               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
-               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
-               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
-               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, data = df.chronic)
 
-summary(m.full.3)
+summary(glm.model.3)
 ```
 
 ```{r}
-anova(m.full.1,m.full.2,m.full.3)
+# remove `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` from glm.model.3
+
+glm.model.3 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~  
+                State + 
+               `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, data = df.chronic)
+
+summary(glm.model.3)
+```
+
+# Lmer (With Variance)
+
+This part is based on the model that we obtained in GLM.
+
+```{r}
+lmer.model.1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ (1|State), data=df.chronic)
+
+summary(lmer.model.1)
+```
+```{r}
+anova(lmer.model.1, glm.model.3)
 ```
 
 ```{r}
-#(step_res <- step(m.full))
-#m.best <- get_model(step_res)
-m.best <- m.full.3
+lmer.model.2 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
+                (1|State) +
+                (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`), data=df.chronic)
+
+summary(lmer.model.2)
 ```
 
 ```{r}
-#remove random intercepts???
-# m.best<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~ 
-#                `Other spending per Decedent during the last two years of life` + 
-#                `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` + 
-#                `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` + 
-#                `Standardized FTE physician labor: Ratio MS/PC (calculated)` + 
-#                `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` + 
-#                `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` + 
-#                (0 + `Other spending per Decedent during the last two years of life` | `Hospital Name`) + 
-#                (0 + `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
-#                (0 + `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
-#                (0 + `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` | `Hospital Name`) + 
-#                (0 + `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life` |      `Hospital Name`) + 
-#                (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`) + 
-#                (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
-#                (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`) + 
-#                (0 + `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
-# summ.best<-summary(m.best)
+# Model 1 is better than model 2, so we remove the random effect of `Other spending per Decedent during the last two years of life` from lmer.model.2
+anova(lmer.model.2, lmer.model.1)
+```
+
+```{r}
+lmer.model.3 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
+                (1|State) +
+                (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`), data=df.chronic)
+
+summary(lmer.model.3)
+```
+
+```{r}
+# Model 3 is better than model 1, so we keep the random effect of `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` in lmer.model.3
+anova(lmer.model.3, lmer.model.1)
+```
+
+```{r}
+lmer.model.4 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
+                 (1|State) +
+                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
+                 (0 + `Standardized FTE physician labor: Ratio MS/PC (calculated)` | `Hospital Name`), data=df.chronic)
+
+summary(lmer.model.4)
+```
+```{r}
+# model 3 is better than model 4, so we remove the random effect of `Standardized FTE physician labor: Ratio MS/PC (calculated)` from lmer.model.4
+anova(lmer.model.4, lmer.model.3)
+```
+
+```{r}
+lmer.model.5 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
+                 (1|State) +
+                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
+                 (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
+
+summary(lmer.model.5)
+```
+
+```{r}
+# model 5 and model 3 don't have significant difference, so we keep the random effect of `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` in lmer.model.5
+anova(lmer.model.5, lmer.model.3)
+```
+
+```{r}
+lmer.model.6 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
+                 (1|State) +
+                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
+                 (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) +
+                 (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
+
+summary(lmer.model.6)
+```
+
+```{r}
+# model 6 and model 5 don't have significant difference, so we keep the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in lmer.model.6
+anova(lmer.model.6, lmer.model.5)
+```
+
+```{r}
+lmer.model.7 <- lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                      `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+ 
+                 (1|State) +
+                 (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`) +
+                 (0 + `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life` | `Hospital Name`) +
+                 (0 + `Home Health Agency Visits per Decedent during the Last Six Months of Life` | `Hospital Name`) +
+                 (0 + `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life` | `Hospital Name`), data=df.chronic)
+
+summary(lmer.model.7)
+```
+
+```{r}
+# model 6 AIC value is lower than model 7, so we remove the random effect of `Home Health Agency Visits per Decedent during the Last Six Months of Life` in lmer.model.7
+anova(lmer.model.7, lmer.model.6)
+```
+
+```{r}
+lmer.model.best <- lmer.model.6
+glm.model.best <- glm.model.3
+```
+
+```{r}
+anova(lmer.model.best, glm.model.best)
 ```
 
 * Fixed effects:
 
 ```{r}
-m.fixef<-fixef(m.best)
-m.fixef
+lmer.model.best.fixef<-fixef(lmer.model.best)
+lmer.model.best.fixef
 ```
 
 * Random effects for first 5 hospitals:
 
 ```{r}
-m.ranef.hospital<-ranef(m.best)[[1]]
-m.ranef.state <- ranef(m.best)[[2]]
+lmer.model.best.ranef.hospital<-ranef(lmer.model.best)[[1]]
+lmer.model.best.ranef.state <- ranef(lmer.model.best)[[2]]
 ```
 
 ```{r}
-#TODO: plot predicted value, redo hw2,hw3 plots
-```
+lmer.model.best.predict <- predict(lmer.model.best)
+glm.model.best.predict <- predict(glm.model.best)
 
-```{r}
-m.best.predict <- predict(m.best)
+# mse for lmer model
+lmer.model.best.mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - lmer.model.best.predict)^2)
+print(lmer.model.best.mse)
 
-# Find the mse
-mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - m.best.predict)^2)
-mse
+# mse for glm model
+glm.model.best.mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - glm.model.best.predict)^2)
+print(glm.model.best.mse)
 ```
 
 ```{r}
 df.chronic.filter <- df.chronic %>% 
-  filter(`Hospital Name` %in% row.names(m.ranef.hospital))
+  filter(`Hospital Name` %in% row.names(lmer.model.best.ranef.hospital))
 
-m.ranef.hospital.altered <- m.ranef.hospital %>% 
+lmer.model.best.ranef.hospital.altered <- lmer.model.best.ranef.hospital %>% 
   rename_with(~paste0("RE-", gsub("`", "", .)), everything()) %>%
   rownames_to_column(var = "Hospital Name")
 
-m.ranef.state.altered <- m.ranef.state %>% 
+lmer.model.best.ranef.state.altered <- lmer.model.best.ranef.state %>% 
   rename("RE-State" = "(Intercept)") %>%
   rownames_to_column(var = "State")
 
-result_df <- inner_join(df.chronic.filter, m.ranef.hospital.altered, by = "Hospital Name")
-result_df <- inner_join(result_df, m.ranef.state.altered, by = "State")
-result_df$predicted <- predict(m.best, newdata = df.chronic.filter)
+result_df <- inner_join(df.chronic.filter, lmer.model.best.ranef.hospital.altered, by = "Hospital Name")
+result_df <- inner_join(result_df, lmer.model.best.ranef.state.altered, by = "State")
+result_df$predicted <- predict(lmer.model.best, newdata = df.chronic.filter)
 
 names(result_df)
 head(result_df)
