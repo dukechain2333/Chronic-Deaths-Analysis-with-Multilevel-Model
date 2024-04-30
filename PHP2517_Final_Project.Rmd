@@ -25,6 +25,7 @@ library(gtsummary)
 library('caret')
 library(corrplot)
 library(lmerTest)
+library(tableone)
 ```
 
 ```{r}
@@ -270,6 +271,13 @@ AIC(m1,m2)
 Because m1 has a slighly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
 
 ```{r}
+# vars_to_include <- setdiff(names(df.chronic), c("Hospital Name", "State", "Region"))
+# 
+# tab <- CreateTableOne(data=df.chronic, vars = vars_to_include, strata="State") 
+# kableone(tab)
+```
+
+```{r}
 #???
 m.full<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
                        `Other spending per Decedent during the last two years of life`+
@@ -295,8 +303,85 @@ summ.full<-summary(m.full)
 ```
 
 ```{r}
-(step_res <- step(m.full))
-m.best <- get_model(step_res)
+m.full.1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                       `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
+               (1|State)+
+               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
+               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
+               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
+
+summary(m.full.1)
+```
+
+```{r}
+# Remove `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from m.full.1
+
+m.full.2<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                       `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
+               (1|State)+
+               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
+               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
+               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
+
+summary(m.full.2)
+```
+```{r}
+# Remove `Intermediate-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` from m.full.2
+
+m.full.3<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+                       `Other spending per Decedent during the last two years of life`+
+               `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`+
+               `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`+
+               `Standardized FTE physician labor: Ratio MS/PC (calculated)`+
+               `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`+
+               `Home Health Agency Visits per Decedent during the Last Six Months of Life`+
+               `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`+
+               (1|State)+
+               (0+`Other spending per Decedent during the last two years of life`|`Hospital Name`)+
+               (0+`Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`|`Hospital Name`)+
+               (0+`Standardized FTE physician labor: Ratio MS/PC (calculated)`|`Hospital Name`)+
+               (0+`Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Home Health Agency Visits per Decedent during the Last Six Months of Life`|`Hospital Name`)+
+               (0+`Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`|`Hospital Name`),data=df.chronic)
+
+summary(m.full.3)
+```
+
+```{r}
+anova(m.full.1,m.full.2,m.full.3)
+```
+
+```{r}
+#(step_res <- step(m.full))
+#m.best <- get_model(step_res)
+m.best <- m.full.3
 ```
 
 ```{r}
