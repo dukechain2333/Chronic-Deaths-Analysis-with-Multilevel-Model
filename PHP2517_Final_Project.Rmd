@@ -25,6 +25,8 @@ library(gtsummary)
 library('caret')
 library(corrplot)
 library(lmerTest)
+library(ggplot2)
+library(usmap)
 ```
 
 # Introduction
@@ -33,9 +35,14 @@ According to [1], chronic diseases are severe conditions that can get worse over
 
 Multilevel modeling (MLM), or hierarchical linear modeling, offers a robust statistical framework for analyzing data structures at multiple levels. This approach is particularly suitable for public health research, where data often involve nested structures, such as patients within hospitals. MLM allows researchers to explore the impact of different level predictors and how these effects vary across groups. This study aims to employ multilevel models to analyze chronic disease mortality data, focusing on identifying critical state-level and region-level predictors. By integrating multiple levels of data, this research seeks to uncover potential targets for intervention that could mitigate the risk factors associated with chronic diseases. 
 
-# Data
+# Data Source
 
 Our data come from the Dartmouth Atlas Project [2]. This site offers access to decades of Medicare data and supplemental materials. Our data are from 2019 and initially have 68 covariates. In terms of data preprocessing, we first look through all variables and try to identify variables with similar meanings. To the best of our knowledge, we only keep variables that have distinct meanings and remove other variables with duplicated information. For example, when we retain variables of `Ratio to the U.S. Average`, we remove the corresponding variables that record the actual numbers. After we choose the `Total` variables, we drop the other variables related to sub-categories. In addition, we remove the `System` variable due to a large proportion (20%) of missing values in in its column. There is an error with the variable `Hospice Days per Decedent during the Last Six Months of Life`, it is more likely to refer to reimbursements than days (data summary has a mean = 1091, min = 1, max = 2180, similar to summaries of other reimbursement variables). So we drop this variable as well. The last step of data cleaning is removing rows with NA values. The final dataset involves 2174 observations and 32 variables: 2 categorical variables are State and Region, and the rest are all numeric. Our outcome in this project is “Number of deaths among chronically ill patients assigned to hospital.” We are concerned about the predictability of both longer-term (two years) and the shorter-term (six months) variables on our outcome of interest. 
+
+# Pre-Proccessing of Data
+
+First of all, to better analyze the pattern of the data, we would like to add a column of `Region` based on the `State` column. We divide the states into four regions: Northeast, Midwest, South, and West. We then check the missing values in the dataset.
+
 
 ```{r}
 library(readxl)
@@ -79,6 +86,8 @@ df.chronic <- df.chronic %>% mutate_if(is.character,as.factor) %>%
 # summary(df.chronic$Region)
 ```
 
+Then, we tried to find the columns with missing values and the ratio of missing values in these columns. We found that the `System` column has 20% missing values, and the `Ambulance spending per Decedent during the last two years of life` column has 0.4% missing values. We decided to remove the `System` column and remove the rows with missing values in the `Ambulance spending per Decedent during the last two years of life` column. Furthermore, from the description of the dataset, we know that there are some columns use negative values to represent missing values. We will replace these negative values with NA. Finally, we will remove the rows with NA values and check the proportion of zeros in each column.
+
 ```{r}
 # check which cols have na values
 na_cols <- colnames(df.chronic)[colSums(is.na(df.chronic)) > 0]
@@ -94,7 +103,15 @@ df.chronic <- df.chronic %>% select(-System)
 
 # `Ambulance spending per Decedent during the last two years of life` has 0.4% missing values, we are going to remove these rows
 df.chronic <- df.chronic %>% drop_na(`Ambulance spending per Decedent during the last two years of life`)
+
+df.chronic[df.chronic<0] <- NA
+# add check for proportion of zeros in each column
+df.chronic <- df.chronic %>% drop_na()
 ```
+
+To be noticed that, we did find a lot of variables in the dataset seems to be overlapping with each other. For example, `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` and `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` are tow sets that share the same subset which is `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, we will remove the `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` column. 
+
+After a detailed examination of the dataset, we will remove these variables: `HRR`, `HRR Name`, `Provider ID`, `City`, `Inpatient Sector Reimbursements per Decedent during the Last Two Years of Life`, `Outpatient Sector Reimbursements per Decedent during the Last Two Years of Life`, `SNF/Long-Term Care Sector Reimbursements per Decedent during the Last Two Years of Life`, `Home Health Sector Reimbursements per Decedent during the Last Two Years of Life`, `Hospice Sector Reimbursements per Decedent during the Last Two Years of Life`, `Reimbursements for Durable Medical Equipment per Decedent during the Last Two Years of Life`, `Ambulance spending per Decedent during the last two years of life`, `Part B Spending for Evaluation & Management per Decedent during the Last Two Years of Life`,`Part B Spending for Procedures per Decedent during the Last Two Years of Life`, `Part B Spending for Imaging per Decedent during the Last Two Years of Life`, `Part B Spending for Tests per Decedent during the Last Two Years of Life`, `Other Part B spending per Decedent during the last two years of life`, `Inpatient Days per Decedent during the Last Two Years of Life`, `Reimbursements per patient day (calculated)`, `Reimbursements per Day: Ratio to US Average (calculated)`, `Hospital reimbursements per Decedent during the last two years of life`, `Payments per physician visit (calculated)`, `Payments for physician visits per Decedent during the last two years of life`, `Physician Visits per Decedent during the Last Two Years of Life`, `Payments per visit: Ratio to US Average (calculated)`, `FTE Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life`, `FTE Medical Specialist Labor Inputs per 1,000 Decedents during the Last Two Years of Life`, `FTE Primary Care Physician Labor Inputs per 1,000 Decedents during the Last Two Years of Life`, `Average Co-Payments for Physician Services per Decedent during the Last Two Years of Life`, `Average Co-Payments for Durable Medical Equipment per Decedent during the Last Two Years of Life`, `Percent of Deaths Occurring In Hospital`, `Percent of Deaths Associated With ICU Admission`, `Physician Visits per Decedent during the Last Six Months of Life`, `Medical Specialist Visits per Decedent during the Last Six Months of Life`, `Primary Care Visits per Decedent during the Last Six Months of Life` and `Percent of Decedents Seeing 10 or More Different Physicians during the Last Six Months of Life`.
 
 ```{r}
 #"Hospital Name"
@@ -103,11 +120,67 @@ cols_to_drop <- c("HRR", "HRR Name", "Provider ID", "City", "Inpatient Sector Re
 df.chronic <- df.chronic %>% select(-cols_to_drop)
 ```
 
+Now, let's examine the corelation between the numeric variables in the dataset. A correlation plot can help us to identify the highly correlated variables.
+
 ```{r}
-df.chronic[df.chronic<0] <- NA
-# add check for proportion of zeros in each column!!!
-df.chronic <- df.chronic %>% drop_na()
+plot_correlation <- function(df){
+  dat <- as.matrix(df)
+  dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
+  dat[upper.tri(dat)] <- 0
+  
+  corrplot(dat, type = "lower" , title="Correlation Plot",cex.main=0.7)
+    # corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
+}
 ```
+
+```{r,out.height="70%"}
+df.numeric <- df.chronic %>%  select_if(is.numeric)
+df.cat <- df.chronic  %>% select_if(is.factor)
+
+cor.df.numeric <- cor(df.numeric, use = "complete.obs")
+plot_correlation(cor.df.numeric)
+```
+
+Although we have manually filtered out a lot of overlapping variables in the previous step, we can see that there are many highly correlated variables in the dataset. This is probably due to those variables has causal effects with each other, and if we include all of them in the model, it will cause problems. We will remove the highly correlated variables using a threshold of 0.3.
+
+```{r}
+# remove highly correlated variables
+hc <- findCorrelation(cor.df.numeric, cutoff=0.3)
+hc <- sort(hc)
+df.numeric <- df.numeric[,-c(hc)]
+
+cor.df.numeric <- cor(df.numeric, use = "complete.obs")
+plot_correlation(cor.df.numeric)
+
+# combine it with categorical variables
+df.cat <- df.chronic  %>% select_if(is.factor)
+
+df.chronic <- cbind(df.cat, df.numeric)
+
+col.df<-colnames(df.chronic)
+col.df
+```
+
+Most of the variables that are highly correlated with each other have been removed. There are 13 variables left in the dataset.
+
+# Exploratory Data Analysis
+
+We will start by checking the map of the United States to see the distribution of the data. We will use the `ggplot2` package to plot the map of the United States and color the states based on the number of deaths among chronically ill patients assigned to hospital.
+
+```{r}
+state.summ <- df.chronic %>%
+  group_by(State) %>%
+  summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
+  rename(state = State)
+
+plot_usmap(data = state.summ, values = "total", lines = "white") +
+  scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
+  theme(legend.position = "right") +
+  labs(title = "Total Chronic Deaths by State")
+
+
+```
+To make the data more clear, we also provide a table of the summary of the number of deaths by region and state.
 
 ```{r}
 library(kableExtra)
@@ -134,6 +207,9 @@ kable_styling(full_width = FALSE, latex_options = c('hold_position'))
 
 #overall_summary
 ```
+
+We might also want to see the variance of the number of deaths by states and regions.
+
 ```{r}
 df.chronic %>%
   group_by(State) %>%
@@ -158,61 +234,9 @@ df.chronic %>%
        y = "Variance of Number of Region") +
   theme_minimal()
 ```
+We do find that the total number of deaths varies significantly across states and regions. This suggests that there might be some state-level and region-level predictors that can explain the variance in the number of deaths among chronically ill patients assigned to hospital. Now, we would like to see if the predictors in the dataset are significantly different across regions and states.
 
-```{r}
-# df.chronic %>%
-#   select(-c(State, `Hospital Name`)) %>%
-#   group_by(Region) %>%
-#   summarize_all(~mean(., na.rm = TRUE))
-```
-
-```{r}
-df.summary<-df.chronic %>% select(-c(State,`Hospital Name`)) %>%
-  tbl_summary(missing="no",
-              by = Region, 
-              type = list(where(is.numeric) ~ "continuous"),
-              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% add_p()%>%
-  modify_caption("Summary of Variables by Region")
-df.summary
-```
-In terms of the multilevel structure of the data, level 1 refers to the State, and level 2 is the Region (we manually convert states to four regions: Midwest, Southeast, South, and West). Based on barplots for `Variance of Number of deaths` by States and Region, we see an obvious difference between groups. Since there are many highly correlated variables, we decide to remove them using a threshold of 0.3. After this variable selection procedure, we are left with 13 variables in total. The `Summary of Variables` Table by Region and States indicate that variables are significantly different across groups. 
-
-```{r}
-plot_correlation <- function(df){
-  dat <- as.matrix(df)
-  dimnames(dat) <- list(rep("", ncol(dat)), rep("", ncol(dat)))
-  dat[upper.tri(dat)] <- 0
-  
-  corrplot(dat, type = "lower" , title="Correlation Plot",cex.main=0.7)
-    # corrplot(dat, type = "lower" , title="Correlation Plot", mar=c(0,0,0,0), cex.main=0.7, number.cex=0.7, tl.cex = 0.7, cl.cex = 0.7)
-}
-```
-
-```{r,out.height="70%"}
-df.numeric <- df.chronic %>%  select_if(is.numeric)
-df.cat <- df.chronic  %>% select_if(is.factor)
-
-cor.df.numeric <- cor(df.numeric, use = "complete.obs")
-plot_correlation(cor.df.numeric)
-```
-
-```{r}
-# remove highly correlated variables
-hc <- findCorrelation(cor.df.numeric, cutoff=0.3)
-hc <- sort(hc)
-df.numeric <- df.numeric[,-c(hc)]
-
-cor.df.numeric <- cor(df.numeric, use = "complete.obs")
-plot_correlation(cor.df.numeric)
-
-# combine it with categorical variables
-df.cat <- df.chronic  %>% select_if(is.factor)
-
-df.chronic <- cbind(df.cat, df.numeric)
-
-col.df<-colnames(df.chronic)
-col.df
-```
+The following table shows the summary of the variables by region. We can see that the variables are significantly different across regions.
 
 ```{r}
 df.summary.region<-df.chronic %>% select(-c(State,`Hospital Name`)) %>%
@@ -224,6 +248,8 @@ df.summary.region<-df.chronic %>% select(-c(State,`Hospital Name`)) %>%
 df.summary.region
 ```
 
+And this table shows the summary of the variables by state. We can see that the variables are significantly different across states.
+
 ```{r}
 df.summary.state<-df.chronic %>% select(-c(Region,`Hospital Name`)) %>%
   tbl_summary(missing="no",
@@ -234,47 +260,7 @@ df.summary.state<-df.chronic %>% select(-c(Region,`Hospital Name`)) %>%
 df.summary.state
 ```
 
-With regards to the multilevel structure of the data, level 1 refers to the State, and level 2 is the Region (we manually convert states to four regions: Midwest, Southeast, South, and West). After constructing models, we compare their AIC values to determine the better model. 
-
-$$
-Y_{ij}\sim N(\beta_j, \sigma^2),  \\
-\beta_j\sim N(\mu,\tau^2)
-$$ 
-
-```{r}
-library(lme4)
-m1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+(1|State),data=df.chronic)
-summ1<-summary(m1)
-```
-
-* Summary table
-```{r}
-VarCorr(m1)
-```
-
-```{r}
-summ1$coefficients
-```
-
-```{r}
-m2<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+(1|Region),data=df.chronic)
-summ2<-summary(m2)
-```
-
-* Summary table
-```{r}
-VarCorr(m2)
-```
-
-```{r}
-summ2$coefficients
-```
-
-```{r}
-AIC(m1,m2)
-```
-
-Because m1 has a slightly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the $j^{th}$ state.
+Based on the exploratory data analysis, we find that the number of deaths among chronically ill patients assigned to hospital varies significantly across states and regions. This suggests that a multilevel model might be more appropriate for analyzing the data. In the next section, we will use generalized linear models (GLM) to do the variable selection and then fit a multilevel model to the data. Our multilevel model will include two levels: state-level and hospital-level. We will use the `lmer` function to fit the multilevel model and use the `anova` test to compare the models with and without random effects to determine the best model.
 
 # Variable Selection through GLM
 
