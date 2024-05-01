@@ -262,6 +262,46 @@ df.summary.state
 
 Based on the exploratory data analysis, we find that the number of deaths among chronically ill patients assigned to hospital varies significantly across states and regions. This suggests that a multilevel model might be more appropriate for analyzing the data. In the next section, we will use generalized linear models (GLM) to do the variable selection and then fit a multilevel model to the data. Our multilevel model will include two levels: state-level and hospital-level. We will use the `lmer` function to fit the multilevel model and use the `anova` test to compare the models with and without random effects to determine the best model.
 
+With regards to the multilevel structure of the data, level 1 refers to the State, and level 2 is the Region (we manually convert states to four regions: Midwest, Southeast, South, and West). After constructing models, we compare their AIC values to determine the better model. 
+
+$Y_{ij}\sim N(\beta_j, \sigma^2), \beta_j\sim N(\mu,\tau^2)$ 
+
+```{r}
+library(lme4)
+m1<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+(1|State),data=df.chronic)
+summ1<-summary(m1)
+```
+
+* Summary table
+```{r}
+VarCorr(m1)
+```
+
+```{r}
+summ1$coefficients
+```
+
+```{r}
+m2<-lmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+(1|Region),data=df.chronic)
+summ2<-summary(m2)
+```
+
+* Summary table
+```{r}
+VarCorr(m2)
+```
+
+```{r}
+summ2$coefficients
+```
+
+```{r}
+AIC(m1,m2)
+```
+
+Because m1 has a slightly lower AIC value, m1 is the better model. Intercept variance = $(35.544)^2 = 1263.376$ represents how much variance in outcome (number of deaths) that is explained between states. Residual variance = $(219.670)^2 = 48254.91$ represents the within state unexplained variance. $\beta_{0}+b_{0j}=305.5872+b_{0j}$ represents the estimated number of deaths (individual intercept) for the jth state.
+
+
 # Variable Selection through GLM
 
 We will start by using generalized linear models (GLM) to analyze the data. This step is mainly used to do the variable selection, and we will conduct a backward selection on the model to find out the variable that have the greatest influence on the outcome.
