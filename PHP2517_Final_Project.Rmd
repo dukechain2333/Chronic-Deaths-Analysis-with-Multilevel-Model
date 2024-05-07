@@ -264,6 +264,7 @@ plot_histogram(df.chronic)
 ```
 
 Based on the exploratory data analysis, we find that the number of deaths among chronically ill patients assigned to hospital varies significantly across states. This suggests that a multilevel model might be more appropriate for analyzing the data. In the next section, we will use generalized linear models (GLM) to do the variable selection and then fit a multilevel model to the data. In particular, the histogram of the outcome suggests that we should fit a poisson model. Our multilevel model will include two levels: state-level and hospital-level.  
+
 $Y_{i}\sim Poisson(\theta_i), log(\theta_i)=X_i \beta$ 
 
 # Variable Selection via GLM
@@ -308,14 +309,12 @@ summ1$coefficients
 
 # Adding Random Effect to the Model
 
-In the previous section, we have used GLM to do the variable selection. However, in the exploratory data analysis, we have found that there seems to be a difference between region and states, suggesting that a multilevel model might be more appropriate. Adding a random effect to the model can help us to account for the variance between groups, thus providing a more accurate estimate of the predictions.
+In the previous section, we have used GLM to do the variable selection. However, in the exploratory data analysis, we have found that there seems to be a difference between states, suggesting that a multilevel model might be more appropriate. Adding a random effect to the model can help us account for the variance between groups, thus providing a more accurate estimate of the predictions.
 
-In this section, we will use the `lmer` function to fit a multilevel model to the data. However, different with the previous part, we will use a forward selection. We will start with the simplest model, which only includes the variables we found in the previous section. We will then add one variable at a time and use `anova` test to check the AIC value and p-values to determine if we will keep the variable in the model. For instance, if the p-value suggests that the two model are not significantly different, we will remove the variable from the model, in other words, we will keep the simple model with fewer variables when the two models are not significantly different. On the other hand, when the p-value suggests that the two models are significantly different, we will keep the more complex model with more variables (usually has a lower AIC value).
-
-We will start by adding the random effect on `State` to the model. The model is `lmer.model.1`.
+In this section, we will use the `glmer` function to fit a multilevel model to the data. We add the random effect on `State` level to the model. 
 
 ```{r}
-glmer.model<-glmer(`Number of deaths among chronically ill patients assigned to hospital` ~1+
+glmer.model<-glmer(`Number of deaths among chronically ill patients assigned to hospital` ~
                       `Other spending per Decedent during the last two years of life` +
                       `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` + 
                       `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life` + 
