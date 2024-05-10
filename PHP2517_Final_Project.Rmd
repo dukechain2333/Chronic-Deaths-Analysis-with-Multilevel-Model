@@ -159,15 +159,15 @@ Most of the variables that are highly correlated with each other have been remov
 We start by visualizing the map of the United States colored by the number of chronic deaths. 
 
 ```{r}
-# state.summ <- df.chronic %>%
-#   group_by(State) %>%
-#   summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
-#   rename(state = State)
-# 
-# plot_usmap(data = state.summ, values = "total", lines = "white") +
-#   scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
-#   theme(legend.position = "right") +
-#   labs(title = "Total Chronic Deaths by State")
+state.summ <- df.chronic %>%
+  group_by(State) %>%
+  summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
+  rename(state = State)
+
+plot_usmap(data = state.summ, values = "total", lines = "white") +
+  scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
+  theme(legend.position = "right") +
+  labs(title = "Total Chronic Deaths by State")
 ```
 To better examine the data, we also provide a summary table of the number of deaths by states.
 
