@@ -285,7 +285,7 @@ glm.model.full <- glm(`Number of deaths among chronically ill patients assigned 
 #backwards = step(glm.model.full)
 ```
 
-We start with a full model with all variables being main effects and use the backward elimination to determine the most important variables to keep. The backward elimination result is to keep all variables as main effects.
+We start with a full model with all predictor variables being main effects and use the backward elimination to determine the most important variables to keep. The backward elimination result is to keep all variables as main effects.
 
 ```{r}
 glm.model.1 <- glm(`Number of deaths among chronically ill patients assigned to hospital` ~ 
@@ -304,9 +304,9 @@ summ1<-summary(glm.model.1)
 
 * Summary table
 ```{r}
-summ1$coefficients
+#summ1$coefficients
 ```
-
+![](glm_summary.png){height=300}
 # Adding Random Effect to the Model
 
 In the previous section, we have used GLM to do the variable selection. However, in the exploratory data analysis, we have found that there seems to be a difference between states, suggesting that a multilevel model might be more appropriate. Adding a random effect to the model can help us account for the variance between groups, thus providing a more accurate estimate of the predictions.
