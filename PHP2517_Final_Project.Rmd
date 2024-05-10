@@ -159,15 +159,15 @@ Most of the variables that are highly correlated with each other have been remov
 We start by visualizing the map of the United States colored by the number of chronic deaths. 
 
 ```{r}
-state.summ <- df.chronic %>%
-  group_by(State) %>%
-  summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
-  rename(state = State)
-
-plot_usmap(data = state.summ, values = "total", lines = "white") +
-  scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
-  theme(legend.position = "right") +
-  labs(title = "Total Chronic Deaths by State")
+# state.summ <- df.chronic %>%
+#   group_by(State) %>%
+#   summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
+#   rename(state = State)
+# 
+# plot_usmap(data = state.summ, values = "total", lines = "white") +
+#   scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
+#   theme(legend.position = "right") +
+#   labs(title = "Total Chronic Deaths by State")
 ```
 To better examine the data, we also provide a summary table of the number of deaths by states.
 
@@ -194,7 +194,7 @@ overall_summary %>%
   booktabs=T, escape=F, align = "c") %>%
 kable_styling(full_width = FALSE, latex_options = c('hold_position'))
 
-overall_summary[1:10,]
+overall_summary[1:6,]
 ```
 
 In addition, we picture the variances of the number of deaths by states.
@@ -311,7 +311,7 @@ summ1<-summary(glm.model.1)
 
 In the previous section, we used GLM to complete the variable selection. However, in the exploratory data analysis, we found significant differences among states, suggesting that a multilevel model with random effects can account for the variances, thus providing more accurate predictions.
 
-In this section, we will use the `glmer` function to fit a multilevel model to the data. We add the random effect (random intercept) on `State` level to the model. Because this new model with random intercept has a lower AIC value compared to the previous model, this new model is a better model.
+In this section, we will use the `glmer` function to fit a multilevel model to the data. Due to a lack of state level predictors from data collection process, We add the random effect (random intercept) at `State` level to our model. Because this new model with random intercept has a lower AIC value compared to the previous model, this new model is a better model.
 
 ```{r}
 glmer.model<-glmer(`Number of deaths among chronically ill patients assigned to hospital` ~
@@ -328,6 +328,8 @@ glmer.model<-glmer(`Number of deaths among chronically ill patients assigned to 
 glmer.model.summ <- summary(glmer.model)
 ```
 
+![](glmer_model.png){height=100}
+![](glmer_summary.png){height=150}
 ```{r}
 AIC(glm.model.1, glmer.model)
 ```
@@ -336,7 +338,8 @@ AIC(glm.model.1, glmer.model)
 glmer.model.best <- glmer.model
 #glm.model.best <- glm.model.1
 ```
-# Results and discussion
+
+# Model Results
 
 * Random effects (intercepts) for the first 10 states:
 ```{r}
@@ -352,25 +355,25 @@ Let beta0 represent individual intercept. When other variables are all zero, `Nu
 glmer.model.best.fixef<-fixef(glmer.model.best)
 glmer.model.best.fixef
 ```
-For each unit increase in `Other spending per Decedent during the last two years of life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(2.935130e-04)=1 while holding other variables constant. 
+For each unit increase in `Other spending per Decedent during the last two years of life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(2.935130e-04)=1 while holding other variables constant. 
 
-For each unit increase in `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(6.173593e-05)=1 while holding other variables constant.
+For each unit increase in `Total ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(6.173593e-05)=1 while holding other variables constant.
 
-For each unit increase in `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(2.407211e-05)=1 while holding other variables constant.
+For each unit increase in `High-Intensity ICU Bed Inputs per 1,000 Decedents during the Last Two Years of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(2.407211e-05)=1 while holding other variables constant.
 
-For each unit increase in `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(4.732679e-05)=1 while holding other variables constant.
+For each unit increase in `SNF Bed Inputs per 1,000 Dededents during the Last Two Years of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(4.732679e-05)=1 while holding other variables constant.
 
-For each unit increase in `Standardized FTE physician labor: Ratio MS/PC (calculated)`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(3.765147e-01)=1.5 while holding other variables constant.
+For each unit increase in `Standardized FTE physician labor: Ratio MS/PC (calculated)`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(3.765147e-01)=1.5 while holding other variables constant.
 
-For each unit increase in `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(1.301605e-04)=1 while holding other variables constant.
+For each unit increase in `Medical & Surgical Unit Days per Decedent during the Last Six Months of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(1.301605e-04)=1 while holding other variables constant.
 
-For each unit increase in `Home Health Agency Visits per Decedent during the Last Six Months of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(-1.623593e-02)=0.98 while holding other variables constant.
+For each unit increase in `Home Health Agency Visits per Decedent during the Last Six Months of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(-1.623593e-02)=0.98 while holding other variables constant.
 
-For each unit increase in `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to multiplied by exp(1.397571e-04)=1 while holding other variables constant. 
+For each unit increase in `Percent of Decedents Enrolled In Hospice during the Last Six Months of Life`, `Number of deaths among chronically ill patients assigned to hospital` is expected to be multiplied by exp(1.397571e-04)=1 while holding other variables constant. 
 
-`Standardized FTE physician labor: Ratio MS/PC (calculated)` seems to be the most important predictor overall given that the `Number of deaths among chronically ill patients assigned to hospital` increases by a multiplier of 1.5 when each unit increase in `Standardized FTE physician labor: Ratio MS/PC (calculated)`. The other variables seem to have low impact on the outcome of interest. The other main effects have a beta close to 0 resulting in exp(beta) close to 1, meaning the outcome of interest is not closely related to the other variables.
+`Standardized FTE physician labor: Ratio MS/PC (calculated)` seems to be the most important predictor overall given that the `Number of deaths among chronically ill patients assigned to hospital` increases by a multiplier of 1.5 for each unit increase in `Standardized FTE physician labor: Ratio MS/PC (calculated)`. The other variables seem to have low impact on the outcome of interest. The other main effects have a beta coefficient close to 0 resulting in exp(beta) close to 1, meaning the outcome of interest is not closely related to the other variables.
 
-Thus, we remove the other main effects from the model. But this simpler model has a higher AIC value compared to the model before, so we decide to keep using the previous model.
+Thus, we also try to remove the other main effects from the model. But this simpler model has a higher AIC value compared to the previous one, so we decide to keep using the previous model.
 ```{r}
 glmer.model2<-glmer(`Number of deaths among chronically ill patients assigned to hospital` ~
                       `Standardized FTE physician labor: Ratio MS/PC (calculated)` +
@@ -383,14 +386,16 @@ glmer.model.summ2 <- summary(glmer.model2)
 AIC(glmer.model2, glmer.model)
 ```
 
-* Prediction MSE:
 ```{r}
-glmer.model.best.predict <- predict(glmer.model.best)
+#Prediction MSE:
+glmer.model.best.predict <- exp(predict(glmer.model.best))
 #glm.model.best.predict <- predict(glm.model.best)
 
-# mse for lmer model
-glmer.model.best.mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - glmer.model.best.predict)^2)
-print(glmer.model.best.mse)
+glmer.model.best.observe <- df.chronic$`Number of deaths among chronically ill patients assigned to hospital`
+
+# # mse for lmer model
+# glmer.model.best.mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - glmer.model.best.predict)^2)
+# print(glmer.model.best.mse)
 
 # # mse for glm model
 # glm.model.best.mse <- mean((df.chronic$`Number of deaths among chronically ill patients assigned to hospital` - glm.model.best.predict)^2)
@@ -398,9 +403,10 @@ print(glmer.model.best.mse)
 ```
 
 ```{r,out.width="50%"}
-boxplot(glmer.model.best.predict,ylab="log(Number of deaths)")
-title(main="Boxplots of Model Predictions")
+boxplot(glmer.model.best.predict, glmer.model.best.observe, names=c("prediction","observation"), ylab="log(Number of deaths)")
+title(main="Boxplots of Model Predictions and Observations")
 ```
+The boxplots above indicate that our model is capable of predicting the majority observations, but performs poorly when it comes to predicting outliers. 
 
 ```{r}
 # df.chronic.filter <- df.chronic %>% 
@@ -422,10 +428,9 @@ title(main="Boxplots of Model Predictions")
 # head(result_df)
 ```
 
-# Discussion and conclusion
+# Discussion and Conclusion
 
 Adding the State level intercepts to our model allows us to better fit the data. `Standardized FTE physician labor: Ratio MS/PC (calculated)` is the most important predictor and has a strong positive relation with our outcome of interest `Number of deaths among chronically ill patients assigned to hospital`. Because the dataset only includes hospital level variables, we did not include state level variables. In future analysis, we should collect more state level information to help us account for more state level differences.
-
 
 # References
 
