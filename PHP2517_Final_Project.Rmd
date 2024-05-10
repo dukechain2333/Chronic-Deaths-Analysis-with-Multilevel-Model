@@ -329,6 +329,7 @@ glmer.model.summ <- summary(glmer.model)
 ```
 
 ![](glmer_model.png){height=100}
+
 ![](glmer_summary.png){height=150}
 ```{r}
 AIC(glm.model.1, glmer.model)
