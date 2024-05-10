@@ -309,7 +309,7 @@ summ1<-summary(glm.model.1)
 ![](glm_summary.png){height=300}
 # Adding Random Effect to the Model
 
-In the previous section, we have used GLM to do the variable selection. However, in the exploratory data analysis, we have found that there seems to be a difference between states, suggesting that a multilevel model might be more appropriate. Adding a random effect to the model can help us account for the variance between groups, thus providing a more accurate estimate of the predictions.
+In the previous section, we used GLM to complete the variable selection. However, in the exploratory data analysis, we found significant differences among states, suggesting that a multilevel model with random effects can account for the variances, thus providing more accurate predictions.
 
 In this section, we will use the `glmer` function to fit a multilevel model to the data. We add the random effect (random intercept) on `State` level to the model. Because this new model with random intercept has a lower AIC value compared to the previous model, this new model is a better model.
 
