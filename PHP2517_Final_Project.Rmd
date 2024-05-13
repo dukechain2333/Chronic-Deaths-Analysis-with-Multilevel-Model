@@ -159,15 +159,15 @@ Most of the variables that are highly correlated with each other have been remov
 We start by visualizing the map of the United States colored by the number of chronic deaths. 
 
 ```{r}
-state.summ <- df.chronic %>%
-  group_by(State) %>%
-  summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
-  rename(state = State)
-
-plot_usmap(data = state.summ, values = "total", lines = "white") +
-  scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
-  theme(legend.position = "right") +
-  labs(title = "Total Chronic Deaths by State")
+# state.summ <- df.chronic %>%
+#   group_by(State) %>%
+#   summarise(total = sum(`Number of deaths among chronically ill patients assigned to hospital`, na.rm = T)) %>%
+#   rename(state = State)
+# 
+# plot_usmap(data = state.summ, values = "total", lines = "white") +
+#   scale_fill_continuous(name = "total", low = "blue", high = "red", label = scales::comma) +
+#   theme(legend.position = "right") +
+#   labs(title = "Total Chronic Deaths by State")
 ```
 To better examine the data, we also provide a summary table of the number of deaths by states.
 
@@ -249,12 +249,14 @@ df.summary.state<-df.chronic %>% select(-c(Region,`Hospital Name`)) %>%
 ```
 
 ![](table_summary.png){height=300}
-Moreover, we plot histograms of all numeric variables. Notice that our outcome variable is heavily right skewed, suggesting that we should opt for a poisson model instead of normal.
+Moreover, we plot histograms of all numeric variables. Notice that our outcome variable is heavily right skewed, suggesting that we should opt for a poisson model instead of normal. Note that even though the poisson model has an assumption that mean should equal to its variance, he variance of our outcome variable is 49599.65, much larger than the its mean 320.3892.
 
 ```{r fig.height=10, fig.width=20}
 library(DataExplorer)
 
 plot_histogram(df.chronic)
+#var(df.chronic$`Number of deaths among chronically ill patients assigned to hospital`)
+#mean(df.chronic$`Number of deaths among chronically ill patients assigned to hospital`)
 ```
 
 ```{r fig.height=10, fig.width=20}
