@@ -309,6 +309,7 @@ summ1<-summary(glm.model.1)
 #summ1$coefficients
 ```
 ![](glm_summary.png){height=300}
+
 # Adding Random Effect to the Model
 
 In the previous section, we used GLM to complete the variable selection. However, in the exploratory data analysis, we found significant differences among states, suggesting that a multilevel model with random effects can account for the variances, thus providing more accurate predictions.
